@@ -33,7 +33,7 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<{ user: User; member?: Member } | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const { toast } = useToast();
@@ -119,8 +119,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       {children}
     </AuthContext.Provider>
   );
-}
-}
+};
 
 export function useAuth() {
   const context = useContext(AuthContext);
