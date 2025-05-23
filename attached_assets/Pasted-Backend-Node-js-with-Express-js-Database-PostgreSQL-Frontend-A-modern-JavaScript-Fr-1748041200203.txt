@@ -1,0 +1,112 @@
+Backend: Node.js with Express.js
+
+    Database: PostgreSQL
+
+    Frontend: A modern JavaScript Framework (React.js or Vue.js)
+
+    Real-time Communication: Socket.IO (for WebSockets)
+
+    File Storage: Cloud-based (e.g., AWS S3) or secure local storage for uploaded documents.
+
+    Payment Gateway: Paystack or Flutterwave
+
+    Notifications: Twilio (for WhatsApp) and SendGrid/Mailgun (for Email)
+
+    UI/UX: Tailwind CSS (or similar utility-first framework), custom animations, and a visually attractive, professional design.
+
+Core Modules & Features
+1. Authentication & User Management
+
+    Secure User Registration:
+
+        Multi-step registration for new members (Student, Associate, Professional, Fellow).
+
+        Collection of personal, educational (with certificate uploads), and professional details.
+
+        Email verification for new accounts.
+
+    Login/Logout: Secure authentication system with session management.
+
+    User Profiles: Customizable member profiles with professional information, achievements, and privacy settings.
+
+    Role-Based Access Control (RBAC): Implement granular permissions for:
+
+        Member: Standard portal access.
+
+        Administrator: Full control over the Admin Dashboard.
+
+        Financial Administrator: Full control over the Financial Management Module.
+
+        Financial Officer: Transaction management within Financial Module.
+
+        Financial Auditor: Read-only access for financial auditing.
+
+        Ethics Officer: Complaint management and sanctioning.
+
+2. Member Management
+
+    Member Directory: Searchable directory of members with detailed profiles.
+
+    Profile Editing: Members can update their personal and professional information.
+
+    Membership Status Tracking: Real-time tracking of subscription and membership status.
+
+3. Subscription Management
+
+    Online Renewal: Members can renew annual subscriptions online.
+
+    Dynamic Fee Calculation:
+
+        Student Member: ₦10,000
+
+        Associate Member: ₦25,000
+
+        Professional Member: ₦50,000
+
+        Fellow: ₦90,000
+
+    Payment Processing: Secure integration with Paystack/Flutterwave.
+
+    Subscription History: View past payments and current status.
+
+    Access Restriction Enforcement: Members with expired subscriptions will be restricted from:
+
+        Applying for SAR/EIAR.
+
+        Using E-Library (if applicable).
+
+        Accessing E-Learning resources.
+
+        Accessing Member Tools.
+
+    Automated Reminders: Email and WhatsApp notifications for upcoming renewals.
+
+4. SAR (Site Analysis Report) & EIAR (Ecological Impact Assessment Report) Application
+
+    Online Application Forms: Multi-page forms for SAR and EIAR applications.
+
+        Dynamic Forms: Dropdown to select "Individual" or "Corporate/Organization" applicant type, dynamically adjusting required proponent information (e.g., individual name vs. organization name).
+
+        Required Fields: Project title, site address, geographic coordinates, plot number, project description (type, size, scope, justification), proponent information.
+
+        Document Uploads: Secure upload of supporting documents (Title document, CofO, Proof of Ownership, Site Plan, Project Drawings, Environmental Management Plan, Baseline Ecological Study Report, other relevant documents).
+
+    Fee Calculation: Automatic calculation of application fees:
+
+        SAR Individual: ₦25,000 + ₦5,200 (administrative fee)
+
+        SAR Corporate: ₦45,000 + ₦5,200 (administrative fee)
+
+        EIAR fees to be defined.
+
+    Payment Processing: Integration with payment gateway.
+
+    E-Affidavit: Mandatory electronic affidavit requiring applicants to sign, attesting to the truthfulness of submitted information.
+
+    Certificate Generation: Automated generation of SAR/EIAR certificates upon approval and payment.
+
+    QR Code Verification: Certificates embed a unique QR code for real-time online verification.
+
+    Delivery: Certificates delivered via WhatsApp and email.
+
+    Status Tracking: Applicants can track their application status.

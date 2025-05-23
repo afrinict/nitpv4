@@ -1,0 +1,654 @@
+develop a cutting-edge web application for the Nigerian Institute of Town Planners (NITP), Abuja Chapter. This platform will serve as a digital hub, streamlining administrative operations, fostering robust member engagement, and providing essential tools and resources for urban planning professionals. The application aims to enhance connectivity, facilitate professional development, and ensure ethical practice within the institute.
+Technology Stack
+
+    Backend: Node.js with Express.js
+
+    Database: PostgreSQL
+
+    Frontend: A modern JavaScript Framework (React.js or Vue.js)
+
+    Real-time Communication: Socket.IO (for WebSockets)
+
+    File Storage: Cloud-based (e.g., AWS S3) or secure local storage for uploaded documents.
+
+    Payment Gateway: Paystack or Flutterwave
+
+    Notifications: Twilio (for WhatsApp) and SendGrid/Mailgun (for Email)
+
+    UI/UX: Tailwind CSS (or similar utility-first framework), custom animations, and a visually attractive, professional design.
+
+Core Modules & Features
+1. Authentication & User Management
+
+    Secure User Registration:
+
+        Multi-step registration for new members (Student, Associate, Professional, Fellow).
+
+        Collection of personal, educational (with certificate uploads), and professional details.
+
+        Email verification for new accounts.
+
+    Login/Logout: Secure authentication system with session management.
+
+    User Profiles: Customizable member profiles with professional information, achievements, and privacy settings.
+
+    Role-Based Access Control (RBAC): Implement granular permissions for:
+
+        Member: Standard portal access.
+
+        Administrator: Full control over the Admin Dashboard.
+
+        Financial Administrator: Full control over the Financial Management Module.
+
+        Financial Officer: Transaction management within Financial Module.
+
+        Financial Auditor: Read-only access for financial auditing.
+
+        Ethics Officer: Complaint management and sanctioning.
+
+2. Member Management
+
+    Member Directory: Searchable directory of members with detailed profiles.
+
+    Profile Editing: Members can update their personal and professional information.
+
+    Membership Status Tracking: Real-time tracking of subscription and membership status.
+
+3. Subscription Management
+
+    Online Renewal: Members can renew annual subscriptions online.
+
+    Dynamic Fee Calculation:
+
+        Student Member: ₦10,000
+
+        Associate Member: ₦25,000
+
+        Professional Member: ₦50,000
+
+        Fellow: ₦90,000
+
+    Payment Processing: Secure integration with Paystack/Flutterwave.
+
+    Subscription History: View past payments and current status.
+
+    Access Restriction Enforcement: Members with expired subscriptions will be restricted from:
+
+        Applying for SAR/EIAR.
+
+        Using E-Library (if applicable).
+
+        Accessing E-Learning resources.
+
+        Accessing Member Tools.
+
+    Automated Reminders: Email and WhatsApp notifications for upcoming renewals.
+
+4. SAR (Site Analysis Report) & EIAR (Ecological Impact Assessment Report) Application
+
+    Online Application Forms: Multi-page forms for SAR and EIAR applications.
+
+        Dynamic Forms: Dropdown to select "Individual" or "Corporate/Organization" applicant type, dynamically adjusting required proponent information (e.g., individual name vs. organization name).
+
+        Required Fields: Project title, site address, geographic coordinates, plot number, project description (type, size, scope, justification), proponent information.
+
+        Document Uploads: Secure upload of supporting documents (Title document, CofO, Proof of Ownership, Site Plan, Project Drawings, Environmental Management Plan, Baseline Ecological Study Report, other relevant documents).
+
+    Fee Calculation: Automatic calculation of application fees:
+
+        SAR Individual: ₦25,000 + ₦5,200 (administrative fee)
+
+        SAR Corporate: ₦45,000 + ₦5,200 (administrative fee)
+
+        EIAR fees to be defined.
+
+    Payment Processing: Integration with payment gateway.
+
+    E-Affidavit: Mandatory electronic affidavit requiring applicants to sign, attesting to the truthfulness of submitted information.
+
+    Certificate Generation: Automated generation of SAR/EIAR certificates upon approval and payment.
+
+    QR Code Verification: Certificates embed a unique QR code for real-time online verification.
+
+    Delivery: Certificates delivered via WhatsApp and email.
+
+    Status Tracking: Applicants can track their application status.
+
+5. E-Learning Platform
+
+    Course Catalog: Browse available e-classes/tutorials.
+
+    Enrollment: Members can enroll in courses.
+
+    Content Delivery: Support for various formats (text, video, presentations, quizzes, assignments).
+
+    Progress Tracking: Track user progress and completion.
+
+    Communication: Forums, messaging, and announcements for instructors and students.
+
+6. Member Tools Access
+
+    Tool Catalog: Browse available professional tools (e.g., web-based ArcGIS, CAD application).
+
+    Credit-Based Access: Access tools by purchasing credits.
+
+        Credit System: 1 Naira = 6 Credits.
+
+        Secure credit purchase via payment gateway.
+
+        Track member credit balances and tool usage.
+
+    Coordinate Map Tool: Integrated map interface for land verification and location (input coordinates, plot locator).
+
+7. Chat & In-App Social Media
+
+    Direct Messaging: Private, real-time one-on-one chat between members.
+
+    Chat Rooms:
+
+        Public and private group chat rooms.
+
+        Users can create new chat rooms (subject to Admin approval).
+
+        Admin moderation tools (edit, delete rooms, manage participants).
+
+    Real-time Communication: Powered by WebSockets (Socket.IO).
+
+    Message History & Search: Store and search chat history.
+
+    File Sharing: Share files, images, and links within chats.
+
+    Notifications: Real-time alerts for new messages.
+
+    Social Profiles: Enhanced member profiles with profile/cover pictures, professional bios, and connections.
+
+    Connections: Send/accept connection requests.
+
+    Activity Feed: Display recent activities of connections (profile updates, posts, shares).
+
+    Posts & Sharing: Members can create and share updates, images, and links; like, comment, and share content.
+
+    Groups: Create and join interest-based groups with dedicated forums.
+
+8. Elections System
+
+    Election Setup: Admin-controlled setup (title, dates, eligible voters, positions).
+
+    Candidate Nomination: Members can nominate candidates.
+
+    Secure Voting: Online vote casting with robust authentication and single-vote enforcement.
+
+    Real-time Counting: Live vote tallying (for admin dashboard).
+
+    Audit Trail: Comprehensive logging of all voting activities.
+
+    Results: Automated announcement and reporting of election results.
+
+9. Ethics Module
+
+    Complaint Submission: Discreet public form on the homepage for members/non-members to submit complaints (complainant info, subject, details, optional attachments).
+
+    Complaint Management (Ethics Officer Dashboard):
+
+        Receive, review, and manage complaints.
+
+        Status tracking (received, investigating, resolved, closed).
+
+        Assignment to Ethics Officers.
+
+        Communication tools for complainants and respondents.
+
+        Evidence recording.
+
+        Reporting on complaint trends.
+
+    Investigation & Adjudication: Tools for conducting investigations and documenting findings.
+
+    Sanctioning: Ethics Officers can:
+
+        Suspend accounts/memberships.
+
+        Set fines on accounts/members.
+
+        Suggest levies for projects (to address issues).
+
+    Appeals System: Members can appeal sanctions.
+
+    Record Keeping: Secure and confidential storage of all ethics-related data.
+
+10. Financial Management Module (Comprehensive Accounting Package)
+
+    Access: Accessible only to Financial Administrators, Financial Officers, and Financial Auditors.
+
+    Chart of Accounts: Define and manage the organization's financial accounts.
+
+    Journal Entries: Create, edit, and manage all financial transactions.
+
+    General Ledger: Centralized view of all financial activity.
+
+    Accounts Payable: Manage vendor invoices, payments, and track outstanding payables.
+
+    Accounts Receivable: Manage customer invoices, payments, and track outstanding receivables.
+
+    Banking: Bank reconciliation, account management, transaction processing.
+
+    Budgeting: Create, track, and analyze budgets (forecasting, variance).
+
+    Expense Approval Workflow: Implement a multi-stage approval process for all expenses.
+
+    Financial Reporting: Generate diverse reports: Balance Sheet, Income Statement, Cash Flow, Trial Balance, customizable reports.
+
+    Tax Management: Manage tax calculations, reporting, and compliance.
+
+    Audit Trail: Detailed, immutable log of all financial transactions and changes.
+
+    User Roles & Permissions: Assign roles within the module.
+
+    Financial Audits: Initiate and approve audits.
+
+11. Admin Dashboard
+
+    Centralized Control: Secure access for Administrators.
+
+    Overview: Key metrics (members, applications, revenue, chat activity), recent activities.
+
+    Financial Dashboard (Reporting Only): High-level summary of financial data from the Financial Management Module (no direct management).
+
+    Tools Control Switch: Manage visibility/access to application features for different roles.
+
+    E-Class Management: Create/manage e-classes, enroll/unenroll participants, track progress.
+
+    Member Management: Full CRUD operations on member accounts.
+
+    SAR/EIAR Application Management: View, process, track applications, generate certificates.
+
+    Payment Management: View payment history, manage settings.
+
+    Election Management: Setup, monitor, publish results.
+
+    Chat Room Management: Create, moderate, approve user-created rooms.
+
+    User & Role Management: Manage all user accounts and assign roles.
+
+    Website Content Management: Manage announcements, news, events.
+
+    Reporting & Analytics: Generate comprehensive reports across all modules.
+
+    Settings: Manage system, email, WhatsApp configurations.
+
+Detailed Workflows for Key Modules
+1. Member Registration Workflow
+
+    User Initiation: Prospective member accesses the registration page on the NITP website.
+
+    Membership Type Selection: User selects category (Student, Associate, Professional, Fellow) from a clear choice presented on the frontend.
+
+    Account Creation (If New User):
+
+        User provides email, password, and confirmation password.
+
+        Backend Action: Validates input, hashes password, creates user record in PostgreSQL (users table), sends verification email. Returns success.
+
+    Detailed Information Provision:
+
+        Frontend presents a multi-step form with conditional fields based on selected membership type.
+
+        User provides: Personal Details (Full Name, DOB, Gender, Nationality, Address, Phone), Educational Qualifications (School, Years, Certificate Uploads), Professional Qualifications (Body, Grade, Number), Employment History, Other Info (Research, Publications, Sponsorship), Profile Picture Upload.
+
+        Backend Action: Validates data, stores in PostgreSQL (members and related tables), saves uploaded files to storage (returning paths), associates member data with user account, generates unique membership number, sends registration confirmation email. Returns success.
+
+    Review & Confirmation: Frontend displays a summary of provided information for user review and agreement to Terms & Conditions.
+
+    Payment: Frontend redirects user to payment gateway for registration fee calculation and payment.
+
+    Payment Confirmation Handling:
+
+        Backend Action: Receives payment confirmation from gateway, updates member's registration status to "payment_received" in the database.
+
+    Final Approval & Membership Activation:
+
+        NITP staff verifies application and documents (manual process via Admin Dashboard).
+
+        Backend Action (triggered by Admin approval): Updates member's status to "active" in the database, sends welcome email with membership number and portal access information.
+
+2. Subscription Management Workflow
+
+    Member Access: Member logs in and navigates to the "Subscriptions" tab on their portal.
+
+    Status Display: Frontend shows current subscription status (Active, Expired, Pending) and expiration date.
+
+    History View: Frontend displays a table of past payments (year, amount, date, receipt).
+
+    Renewal Initiation: If subscription is expiring/expired, a "Renew" button/prompt appears.
+
+    Fee Calculation: System automatically determines fee based on member's category (Student: ₦10,000, Associate: ₦25,000, Professional: ₦50,000, Fellow: ₦90,000).
+
+    Payment Processing:
+
+        Member initiates payment via secure gateway.
+
+        Backend Action: Processes payment, receives confirmation, generates receipt, updates subscription status to "Active" and records payment in the database.
+
+    Automated Reminders: Backend Action: Sends email/WhatsApp reminders before expiration (e.g., 30 days, 7 days, 1 day).
+
+    Access Restriction Enforcement: Backend Action (middleware): Restricts access to SAR/EIAR applications, E-Library, E-Learning, and Member Tools for expired members.
+
+3. SAR & EIAR Application Workflow
+
+    Applicant Initiation: Member logs in, navigates to SAR/EIAR section, initiates new application.
+
+    Eligibility Check: Backend Action: Verifies active subscription. If expired, prompts renewal.
+
+    Application Form Submission (Multi-Page):
+
+        Page 1 (Application Type & Project Info): User selects "Individual" or "Corporate" (dropdown). Frontend dynamically adjusts proponent fields. User provides project title, site address, geographic coordinates, plot number, project description, and proponent contact info.
+
+        Page 2 (Environmental Setting): User describes site characteristics, ecological resources, socio-economic environment.
+
+        Page 3 (Potential Ecological Impacts): User describes impacts during construction, operation, decommissioning, and cumulative impacts.
+
+        Page 4 (Mitigation Measures): User describes proposed mitigation measures for identified impacts.
+
+        Page 5 (Attachments): User uploads required documents (Site Plan, Project Drawings, Environmental Management Plan, Baseline Ecological Study Report, other relevant documents).
+
+        Page 6 (Declaration & E-Affidavit): User reviews declaration and electronically signs an e-affidavit (e.g., checkbox confirmation, digital signature capture).
+
+        Backend Action: Receives and validates data from each page, stores temporary data in session or partial database records, handles file uploads.
+
+    Fee Calculation: Backend Action: Calculates fee based on application type (Individual/Corporate) and report type (SAR/EIAR).
+
+        SAR Individual: ₦25,000 + ₦5,200 (admin fee)
+
+        SAR Corporate: ₦45,000 + ₦5,200 (admin fee)
+
+        EIAR fees to be defined.
+
+    Payment Processing: Applicant redirected to payment gateway. Backend Action: Receives confirmation.
+
+    Certificate Generation: Backend Action: Upon confirmed payment, automatically generates SAR/EIAR certificate (PDF or similar) with unique QR code.
+
+    Certificate Delivery: Backend Action: Delivers certificate via WhatsApp and email.
+
+    Status Tracking: Applicant tracks application status (e.g., Pending, Under Review, Approved, Rejected) on their profile.
+
+    Online Verification: Public/Admin can scan QR code to verify certificate authenticity online via a dedicated portal.
+
+4. E-Learning Module Workflow
+
+    Admin Course Creation: Admin logs in, accesses E-Class Management on Admin Dashboard, creates new courses (title, description, content type, instructor, prerequisites).
+
+    Content Upload: Admin uploads course materials (videos, PDFs, quizzes, assignments) to secure storage.
+
+    Course Publication: Admin publishes the e-class, making it available for members to enroll.
+
+    Participant Management (Admin): Admin can manually enroll/unenroll members in courses, view class rosters.
+
+    Course Catalog (Member): Member logs in, accesses E-Learning tab, browses available courses.
+
+    Enrollment (Member): Member enrolls in a course.
+
+    Content Access (Member): Member views course content sequentially or by module.
+
+    Progress Tracking (Member & Admin): System tracks member progress (e.g., module completion, quiz scores, assignment submissions). Admin can view individual and overall class progress.
+
+    Communication: Members/Instructors use integrated forums/messaging for discussions, Q&A, and announcements within the course.
+
+5. Member Tools Access Workflow
+
+    Tool Catalog Browsing: Member logs in, navigates to "Member Tools" tab, views available tools (e.g., Web ArcGIS, Web CAD), descriptions, and credit costs per usage unit.
+
+    Credit Balance Check: Frontend displays member's current credit balance.
+
+    Credit Purchase:
+
+        Member selects credit package (e.g., ₦1000 for 6000 Credits).
+
+        Redirected to payment gateway for Naira payment.
+
+        Backend Action: Processes payment, converts Naira to Credits (1 Naira = 6 Credits), updates member's credit balance in database.
+
+    Tool Access Request: Member clicks to access a specific tool.
+
+    Credit Deduction & Access Grant:
+
+        Backend Action: Checks if sufficient credits are available for the tool's cost per session/hour.
+
+        If yes, credits are deducted, and access to the tool (e.g., embedded iframe, authenticated link to a third-party web tool) is granted.
+
+        If no, member is prompted to purchase more credits.
+
+    Usage Tracking: Backend Action: Logs tool usage (tool name, start/end time, credits consumed) for auditing and reporting.
+
+6. Chat Functionality Workflow
+
+    Login: Member logs in to access chat features.
+
+    Chat Interface: Frontend displays split layout (left: chat room list; right: message area).
+
+    Direct Messaging:
+
+        Member selects another online member from a list.
+
+        Private chat window opens.
+
+        Messages sent/received in real-time via WebSockets.
+
+        Backend Action: Stores messages in database, handles real-time delivery.
+
+    Chat Room Participation:
+
+        Member selects a public/private chat room from the list.
+
+        Messages sent/received in real-time.
+
+        Displays online users in the room.
+
+    Chat Room Creation (Member):
+
+        Member submits a request to create a new chat room (name, description, type).
+
+        Backend Action: Records request, sends notification to Admin for approval.
+
+    Chat Room Approval (Admin):
+
+        Admin reviews request on Admin Dashboard (Chat Room Management section).
+
+        Admin approves/rejects. If approved, Backend Action: creates room, makes it active.
+
+    Message History & Search: Users can scroll through history and search messages.
+
+    File Sharing: Users can upload/share files within chats. Backend Action: Handles file storage and link generation.
+
+    Notifications: Real-time alerts for new messages (visual, sound, desktop).
+
+7. Elections System Workflow
+
+    Election Setup (Admin): Admin logs in, accesses Election Management on Admin Dashboard, creates new election (title, start/end dates, positions, eligible voter criteria).
+
+    Candidate Nomination: Members nominate themselves or others for positions. Backend Action: Collects and stores candidate info.
+
+    Voter Eligibility Check: Backend Action: Verifies member's active status and eligibility for specific election based on defined criteria.
+
+    Vote Casting (Member):
+
+        Eligible member accesses election page during voting period.
+
+        Frontend displays candidates.
+
+        Member casts vote.
+
+        Backend Action: Securely records vote (ensuring single vote per member, preventing tampering).
+
+    Real-time Counting (Admin Dashboard): Admin Dashboard displays live vote tallies.
+
+    Results Announcement: After end date, Admin triggers results announcement. Backend Action: Calculates final results, publishes them.
+
+    Audit Trail: Backend Action: Logs all election activities and votes for transparency and auditing.
+
+8. Ethics Module Workflow
+
+    Complaint Submission (Public/Member):
+
+        User accesses discreet complaint form (homepage/dedicated page).
+
+        Provides complainant info (optional for public), subject, details, optional attachments.
+
+        Backend Action: Records complaint with "Received" status, sends confirmation to complainant.
+
+    Complaint Receipt & Initial Status (Backend): Backend records complaint with "Received" status.
+
+    Complaint Management (Ethics Officer Dashboard):
+
+        Ethics Officer logs in, accesses Ethics Module Dashboard.
+
+        Views list of complaints, filters by status.
+
+        Selects a complaint to review.
+
+        Changes status (e.g., "Under Investigation").
+
+        Communicates with complainant/respondent via integrated tools.
+
+        Records evidence and investigation notes.
+
+    Investigation & Adjudication: Ethics Officer conducts investigation. Backend Action: Tools for documenting findings and conclusions.
+
+    Sanctioning:
+
+        Ethics Officer recommends sanction (e.g., suspend, fine, levy).
+
+        Backend Action: Applies sanction (updates member status, records fine in Financial Module, creates levy record).
+
+    Appeals (Member):
+
+        Sanctioned member submits appeal via frontend.
+
+        Backend Action: Records appeal.
+
+        Ethics Officer/designated body reviews appeal, updates status.
+
+    Record Keeping: Backend Action: Maintains secure, confidential records of all ethics-related data.
+
+9. Financial Management Module Workflow
+
+    Access & Login: Financial Admin/Officer/Auditor logs in, accesses Financial Management Module.
+
+    Chart of Accounts Management (Financial Admin): Financial Admin defines/manages accounts.
+
+    Journal Entry Creation (Financial Officer/Admin):
+
+        User creates new journal entries for transactions (e.g., income, expenses).
+
+        Backend Action: Validates and records entry in General Ledger.
+
+    Expense Approval Workflow:
+
+        Expense submitted (e.g., by staff, other modules).
+
+        Backend Action: Routes for approval (e.g., to Financial Officer, then Financial Admin).
+
+        Approvers review details, approve/reject.
+
+        Backend Action: Updates status, logs approval, triggers payment if approved.
+
+    Payment Processing (AP/AR): Financial Officer/Admin manages invoices, records payments (receivable/payable).
+
+    Banking & Reconciliation: Financial Officer/Admin reconciles bank statements, manages bank accounts.
+
+    Budgeting: Financial Admin creates/manages budgets (forecasting, variance analysis).
+
+    Financial Reporting: Users generate diverse reports (Balance Sheet, Income Statement, Cash Flow, Trial Balance, customizable reports).
+
+    Auditing (Financial Auditor): Financial Auditor views all financial records, audit trails, generates audit reports, investigates discrepancies.
+
+    User Roles & Permissions (Financial Admin): Financial Admin assigns roles within the module.
+
+10. Admin Dashboard Workflow
+
+    Login: Administrator logs in.
+
+    Overview: Dashboard displays key metrics, recent activities, and Financial Dashboard summary.
+
+    Tools Control Switch: Admin activates/deactivates features for roles.
+
+    E-Class Management: Admin manages courses and participants.
+
+    Member Management: Admin performs CRUD operations on member accounts.
+
+    SAR/EIAR Application Management: Admin views, processes, tracks applications, generates certificates.
+
+    Payment Management: Admin views history, manages settings.
+
+    Election Management: Admin sets up, monitors, publishes elections.
+
+    Chat Room Management: Admin creates, moderates, approves user-created rooms.
+
+    User & Role Management: Admin manages all user accounts and assigns roles.
+
+    Website Content Management: Admin updates announcements, news, events.
+
+    Reporting & Analytics: Admin generates comprehensive reports.
+
+    Settings: Admin manages system configurations.
+
+Frontend Development (Attractive Look & Feel)
+
+    Modern UI/UX: Design a clean, intuitive, and visually appealing interface.
+
+    Responsive Design: Flawless experience across desktops, tablets, and mobile devices.
+
+    Dynamic Content: Data-driven components for news feeds, event listings, member directories, etc.
+
+    Animations & Transitions: Subtle, engaging animations for smooth user interactions and visual feedback.
+
+    Branding: Strict adherence to NITP branding guidelines (colors, typography, logo usage).
+
+    Accessibility: WCAG compliance for inclusive design.
+
+    Reusable Components: Develop a robust component library.
+
+    Toast Notifications & Tooltips: Implement user-friendly feedback mechanisms.
+
+Backend Development (Node.js & PostgreSQL Specifics)
+
+    API Design: Build a robust RESTful API using Express.js.
+
+    Database Schema: Design a normalized PostgreSQL database schema for all entities, ensuring data integrity and relationships.
+
+    ORM: Utilize Sequelize or TypeORM for efficient and secure database interactions.
+
+    Authentication: Implement JWT-based authentication for API security.
+
+    Authorization: Middleware for role-based access control on all API routes.
+
+    Real-time: Integrate Socket.IO for chat and real-time updates.
+
+    File Handling: Use Multer for file uploads, integrate with cloud storage (e.g., AWS S3) for scalable and secure asset management.
+
+    Payment Gateway Webhooks: Implement secure webhook listeners for payment confirmations.
+
+    Email & WhatsApp Integration: Node.js modules for sending notifications and certificates.
+
+    Security:
+
+        Password hashing (bcrypt).
+
+        Input validation and sanitization (e.g., Joi, express-validator).
+
+        Protection against common vulnerabilities (CSRF, XSS, SQL Injection - via ORM).net
+
+        Rate limiting and brute-force protection.
+
+    Scalability: Design the architecture for future growth and high concurrency.
+
+    Error Handling: Centralized error handling and logging.
+
+Deployment & Maintenance
+
+    Containerization: Dockerize the application for consistent deployment.
+
+    CI/CD: Implement Continuous Integration/Continuous Deployment pipelines.
+
+    Monitoring: Set up application performance monitoring and logging.
+
+    Documentation: Comprehensive API and user documentation.
