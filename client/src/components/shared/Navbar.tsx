@@ -6,10 +6,9 @@ import { useAuth } from "@/hooks/use-auth";
 
 interface NavbarProps {
   showLoginModal: () => void;
-  showRegistrationModal: () => void;
 }
 
-export default function Navbar({ showLoginModal, showRegistrationModal }: NavbarProps) {
+export default function Navbar({ showLoginModal }: NavbarProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [location] = useLocation();
   const { user } = useAuth();
@@ -75,13 +74,14 @@ export default function Navbar({ showLoginModal, showRegistrationModal }: Navbar
                 >
                   Login
                 </Button>
-                <Button
-                  className="ml-3 inline-flex items-center"
-                  variant="outline"
-                  onClick={showRegistrationModal}
-                >
-                  Register
-                </Button>
+                <Link href="/register">
+                  <Button
+                    className="ml-3 inline-flex items-center"
+                    variant="outline"
+                  >
+                    Register
+                  </Button>
+                </Link>
               </>
             )}
             <button

@@ -149,3 +149,16 @@
 .animate-fade-in {
   animation: fadeIn 0.5s ease-in-out;
 }
+
+@keyframes marquee-scroll {
+  0% { transform: translateX(100%); }
+  100% { transform: translateX(-100%); }
+}
+
+.animate-marquee {
+  animation: marquee-scroll 15s linear infinite;
+}
+
+.animate-marquee-slow {
+  animation: marquee-scroll 30s linear infinite;
+}

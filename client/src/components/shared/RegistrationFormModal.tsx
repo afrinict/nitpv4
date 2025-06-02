@@ -4,6 +4,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { api } from '@/lib/api';
+import ImageUpload from '../ImageUpload';
 
 import {
   Dialog,
@@ -29,11 +31,24 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { Label } from '@/components/ui/label';
 
 interface RegistrationFormModalProps {
   isOpen: boolean;
   onClose: () => void;
   registrationType: string;
+}
+
+interface RegistrationFormData {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  password: string;
+  confirmPassword: string;
+  profilePicture: string[];
+  identificationDocuments: string[];
+  academicDocuments: string[];
 }
 
 // Define the steps of the registration process
@@ -42,7 +57,9 @@ type RegistrationStep =
   | "personal" 
   | "education" 
   | "professional" 
-  | "review";
+  | "verification"
+  | "review"
+  | "documents";
 
 // Define the schema for the account step
 const accountSchema = z.object({
@@ -78,7 +95,7 @@ const educationSchema = z.object({
   field: z.string().min(1, { message: "Field of study is required" }),
   startYear: z.string().min(1, { message: "Start year is required" }),
   endYear: z.string().optional(),
-  certificateUrl: z.string().optional(),
+  certificateFile: z.instanceof(File).optional(),
 });
 
 // Define the schema for the professional step
@@ -94,14 +111,32 @@ const professionalSchema = z.object({
   bio: z.string().optional(),
 });
 
+// Define the schema for the verification step
+const verificationSchema = z.object({
+  emailOtp: z.string().min(6, { message: "Email OTP must be 6 digits" }),
+  phoneOtp: z.string().min(6, { message: "Phone OTP must be 6 digits" }),
+});
+
 export default function RegistrationFormModal({
   isOpen,
   onClose,
   registrationType,
 }: RegistrationFormModalProps) {
   const [currentStep, setCurrentStep] = useState<RegistrationStep>("account");
-  const [formData, setFormData] = useState<Record<string, any>>({});
+  const [formData, setFormData] = useState<RegistrationFormData>({
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    password: '',
+    confirmPassword: '',
+    profilePicture: [],
+    identificationDocuments: [],
+    academicDocuments: []
+  });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSendingOtp, setIsSendingOtp] = useState(false);
+  const [otpSent, setOtpSent] = useState({ email: false, phone: false });
   const { toast } = useToast();
   
   // Format the registration type for display
@@ -144,7 +179,6 @@ export default function RegistrationFormModal({
       field: "",
       startYear: "",
       endYear: "",
-      certificateUrl: "",
     },
   });
 
@@ -163,7 +197,38 @@ export default function RegistrationFormModal({
     },
   });
 
-  const nextStep = (data: any) => {
+  const verificationForm = useForm<z.infer<typeof verificationSchema>>({
+    resolver: zodResolver(verificationSchema),
+    defaultValues: {
+      emailOtp: "",
+      phoneOtp: "",
+    },
+  });
+
+  const sendOtp = async (type: 'email' | 'phone') => {
+    setIsSendingOtp(true);
+    try {
+      const endpoint = type === 'email' ? '/api/auth/send-email-otp' : '/api/auth/send-phone-otp';
+      const data = type === 'email' ? { email: formData.email } : { phone: formData.phoneNumber };
+      
+      await api.post(endpoint, data);
+      setOtpSent(prev => ({ ...prev, [type]: true }));
+      toast({
+        title: 'OTP Sent',
+        description: `Verification code has been sent to your ${type}.`
+      });
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: `Failed to send ${type} OTP. Please try again.`,
+        variant: 'destructive'
+      });
+    } finally {
+      setIsSendingOtp(false);
+    }
+  };
+
+  const nextStep = async (data: any) => {
     // Merge form data with existing data
     setFormData({ ...formData, ...data });
 
@@ -179,7 +244,18 @@ export default function RegistrationFormModal({
         setCurrentStep("professional");
         break;
       case "professional":
+        setCurrentStep("verification");
+        // Send OTPs when reaching verification step
+        await Promise.all([
+          sendOtp('email'),
+          sendOtp('phone')
+        ]);
+        break;
+      case "verification":
         setCurrentStep("review");
+        break;
+      case "review":
+        setCurrentStep("documents");
         break;
       default:
         break;
@@ -197,8 +273,14 @@ export default function RegistrationFormModal({
       case "professional":
         setCurrentStep("education");
         break;
-      case "review":
+      case "verification":
         setCurrentStep("professional");
+        break;
+      case "review":
+        setCurrentStep("verification");
+        break;
+      case "documents":
+        setCurrentStep("review");
         break;
       default:
         break;
@@ -208,14 +290,29 @@ export default function RegistrationFormModal({
   const submitRegistration = async () => {
     setIsSubmitting(true);
     try {
-      // Combine all form data
-      const combinedData = {
-        ...formData,
-        membershipType: registrationType.toUpperCase(),
-      };
+      // Create FormData for file upload
+      const formDataToSend = new FormData();
+      
+      // Add all form data
+      Object.entries(formData).forEach(([key, value]) => {
+        if (value instanceof File) {
+          formDataToSend.append(key, value);
+        } else if (typeof value === 'object') {
+          formDataToSend.append(key, JSON.stringify(value));
+        } else {
+          formDataToSend.append(key, String(value));
+        }
+      });
+
+      // Add membership type
+      formDataToSend.append('membershipType', registrationType.toUpperCase());
 
       // Submit registration
-      const response = await apiRequest("POST", "/api/auth/register", combinedData);
+      const response = await apiRequest("POST", "/api/auth/register", formDataToSend, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
       
       if (!response.ok) {
         const errorData = await response.json();
@@ -242,6 +339,37 @@ export default function RegistrationFormModal({
     }
   };
 
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleProfilePictureUploaded = (urls: string[]) => {
+    setFormData(prev => ({
+      ...prev,
+      profilePicture: urls
+    }));
+  };
+
+  const handleIdentificationDocumentsUploaded = (urls: string[]) => {
+    setFormData(prev => ({
+      ...prev,
+      identificationDocuments: [...prev.identificationDocuments, ...urls]
+    }));
+  };
+
+  const handleAcademicDocumentsUploaded = (urls: string[]) => {
+    setFormData(prev => ({
+      ...prev,
+      academicDocuments: [...prev.academicDocuments, ...urls]
+    }));
+  };
+
+  if (!isOpen) return null;
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-4xl">
@@ -257,24 +385,28 @@ export default function RegistrationFormModal({
         {/* Progress Steps */}
         <div className="w-full py-6">
           <div className="flex">
-            <div className={`step-item ${currentStep === "account" || currentStep === "personal" || currentStep === "education" || currentStep === "professional" || currentStep === "review" ? "complete" : ""}`}>
+            <div className={`step-item ${currentStep === "account" || currentStep === "personal" || currentStep === "education" || currentStep === "professional" || currentStep === "verification" || currentStep === "review" || currentStep === "documents" ? "complete" : ""}`}>
               <div className={`step ${currentStep === "account" ? "active" : ""}`}>1</div>
               <p className="text-xs mt-2">Account</p>
             </div>
-            <div className={`step-item ${currentStep === "personal" || currentStep === "education" || currentStep === "professional" || currentStep === "review" ? "complete" : ""}`}>
+            <div className={`step-item ${currentStep === "personal" || currentStep === "education" || currentStep === "professional" || currentStep === "verification" || currentStep === "review" || currentStep === "documents" ? "complete" : ""}`}>
               <div className={`step ${currentStep === "personal" ? "active" : ""}`}>2</div>
               <p className="text-xs mt-2">Personal Info</p>
             </div>
-            <div className={`step-item ${currentStep === "education" || currentStep === "professional" || currentStep === "review" ? "complete" : ""}`}>
+            <div className={`step-item ${currentStep === "education" || currentStep === "professional" || currentStep === "verification" || currentStep === "review" || currentStep === "documents" ? "complete" : ""}`}>
               <div className={`step ${currentStep === "education" ? "active" : ""}`}>3</div>
               <p className="text-xs mt-2">Education</p>
             </div>
-            <div className={`step-item ${currentStep === "professional" || currentStep === "review" ? "complete" : ""}`}>
+            <div className={`step-item ${currentStep === "professional" || currentStep === "verification" || currentStep === "review" || currentStep === "documents" ? "complete" : ""}`}>
               <div className={`step ${currentStep === "professional" ? "active" : ""}`}>4</div>
               <p className="text-xs mt-2">Professional</p>
             </div>
-            <div className={`step-item ${currentStep === "review" ? "complete" : ""}`}>
-              <div className={`step ${currentStep === "review" ? "active" : ""}`}>5</div>
+            <div className={`step-item ${currentStep === "verification" || currentStep === "review" || currentStep === "documents" ? "complete" : ""}`}>
+              <div className={`step ${currentStep === "verification" ? "active" : ""}`}>5</div>
+              <p className="text-xs mt-2">Verification</p>
+            </div>
+            <div className={`step-item ${currentStep === "review" || currentStep === "documents" ? "complete" : ""}`}>
+              <div className={`step ${currentStep === "review" ? "active" : ""}`}>6</div>
               <p className="text-xs mt-2">Review</p>
             </div>
           </div>
@@ -672,12 +804,12 @@ export default function RegistrationFormModal({
                   <div className="sm:col-span-6">
                     <FormField
                       control={educationForm.control}
-                      name="certificateUrl"
+                      name="certificateFile"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Certificate URL (if available)</FormLabel>
+                          <FormLabel>Certificate File (if available)</FormLabel>
                           <FormControl>
-                            <Input {...field} placeholder="https://example.com/certificate.pdf" />
+                            <Input type="file" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -861,6 +993,52 @@ export default function RegistrationFormModal({
             </Form>
           )}
 
+          {currentStep === "verification" && (
+            <Form {...verificationForm}>
+              <form onSubmit={verificationForm.handleSubmit(nextStep)} className="space-y-6">
+                <div className="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
+                  <div className="sm:col-span-3">
+                    <FormField
+                      control={verificationForm.control}
+                      name="emailOtp"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Email OTP</FormLabel>
+                          <FormControl>
+                            <Input {...field} placeholder="Enter email OTP" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <div className="sm:col-span-3">
+                    <FormField
+                      control={verificationForm.control}
+                      name="phoneOtp"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Phone OTP</FormLabel>
+                          <FormControl>
+                            <Input {...field} placeholder="Enter phone OTP" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
+                <div className="flex justify-between">
+                  <Button type="button" variant="outline" onClick={prevStep}>
+                    Back
+                  </Button>
+                  <Button type="submit">Next</Button>
+                </div>
+              </form>
+            </Form>
+          )}
+
           {currentStep === "review" && (
             <div className="space-y-6">
               <div className="bg-neutral-50 dark:bg-neutral-800 p-6 rounded-lg">
@@ -911,6 +1089,76 @@ export default function RegistrationFormModal({
                 </Button>
                 <Button onClick={submitRegistration} disabled={isSubmitting}>
                   {isSubmitting ? "Submitting..." : "Submit Application"}
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {currentStep === "documents" && (
+            <div className="space-y-6">
+              <div>
+                <Label>Profile Picture</Label>
+                <ImageUpload
+                  onImageUploaded={handleProfilePictureUploaded}
+                  multiple={false}
+                  maxSize={5}
+                  label="Upload Profile Picture"
+                  description="Upload a professional headshot or passport photograph"
+                  className="mt-2"
+                />
+              </div>
+
+              <div>
+                <Label>Identification Documents</Label>
+                <ImageUpload
+                  onImageUploaded={handleIdentificationDocumentsUploaded}
+                  multiple={true}
+                  maxFiles={3}
+                  maxSize={10}
+                  label="Upload ID Documents"
+                  description="Upload government-issued ID, passport, or other identification documents"
+                  className="mt-2"
+                />
+                {formData.identificationDocuments?.length > 0 && (
+                  <p className="text-sm text-gray-500 mt-2">
+                    {formData.identificationDocuments.length} document(s) uploaded
+                  </p>
+                )}
+              </div>
+
+              {registrationType === 'student' && (
+                <div>
+                  <Label>Academic Documents</Label>
+                  <ImageUpload
+                    onImageUploaded={handleAcademicDocumentsUploaded}
+                    multiple={true}
+                    maxFiles={5}
+                    maxSize={10}
+                    label="Upload Academic Documents"
+                    description="Upload student ID, admission letter, or other academic documents"
+                    className="mt-2"
+                  />
+                  {formData.academicDocuments?.length > 0 && (
+                    <p className="text-sm text-gray-500 mt-2">
+                      {formData.academicDocuments.length} document(s) uploaded
+                    </p>
+                  )}
+                </div>
+              )}
+
+              <div className="flex justify-end space-x-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setCurrentStep("personal")}
+                >
+                  Back
+                </Button>
+                <Button
+                  type="button"
+                  onClick={() => setCurrentStep("review")}
+                >
+                  Next
                 </Button>
               </div>
             </div>
