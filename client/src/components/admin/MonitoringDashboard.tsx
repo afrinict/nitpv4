@@ -121,14 +121,16 @@ const MonitoringDashboard: React.FC = () => {
           <h2 className="text-lg font-semibold mb-4">Failed Attempts Trend</h2>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={stats.failedAttempts}>
+              <LineChart data={[
+                { name: 'Email', value: stats.failedAttempts.email },
+                { name: 'Phone', value: stats.failedAttempts.phone }
+              ]}>
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="timestamp" />
+                <XAxis dataKey="name" />
                 <YAxis />
                 <Tooltip />
                 <Legend />
-                <Line type="monotone" dataKey="email" stroke="#8884d8" />
-                <Line type="monotone" dataKey="phone" stroke="#82ca9d" />
+                <Line type="monotone" dataKey="value" stroke="#8884d8" />
               </LineChart>
             </ResponsiveContainer>
           </div>

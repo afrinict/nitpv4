@@ -201,7 +201,7 @@ const Applications = () => {
                         <div className="inline-block px-2 py-1 rounded-full bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 text-xs font-medium mb-2">
                           Completed
                         </div>
-                        <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200">Project Planning Approval</h2>
+                        <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200">EIAR Application</h2>
                       </div>
                       <div className="mt-2 md:mt-0">
                         <span className="text-sm text-gray-600 dark:text-gray-400">Application ID: PPA-2025-0312</span>
@@ -330,9 +330,9 @@ const Applications = () => {
                   </p>
                   <div className="flex justify-between items-center mt-2">
                     <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Fee: ₦30,200</span>
-                    <button className="text-sm text-blue-700 dark:text-blue-400 font-medium hover:underline">
+                    <Link href="/sar/application" className="text-sm text-blue-700 dark:text-blue-400 font-medium hover:underline">
                       Apply Now
-                    </button>
+                    </Link>
                   </div>
                 </div>
                 
@@ -342,9 +342,9 @@ const Applications = () => {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" />
                     </svg>
                   </div>
-                  <h3 className="text-lg font-semibold mb-2 text-gray-800 dark:text-gray-200">Project Planning Approval</h3>
+                  <h3 className="text-lg font-semibold mb-2 text-gray-800 dark:text-gray-200">EIAR Application</h3>
                   <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                    Professional approval for building and development projects to ensure compliance with planning regulations.
+                    Professional assessment of potential environmental impacts of development projects and proposed mitigation measures.
                   </p>
                   <div className="flex justify-between items-center mt-2">
                     <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Fee: ₦50,200</span>

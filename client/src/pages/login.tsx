@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { useForm } from "react-hook-form";
-import axios from "axios";
+import { api } from "@/lib/api";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface LoginFormData {
   identifier: string;
@@ -12,6 +13,7 @@ const Login = () => {
   const [, setLocation] = useLocation();
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const { login } = useAuth();
 
   const { register, handleSubmit, formState: { errors } } = useForm<LoginFormData>();
 
@@ -20,19 +22,9 @@ const Login = () => {
     setError(null);
     
     try {
-      const response = await axios.post('/api/auth/login', data);
-      localStorage.setItem('user', JSON.stringify(response.data.user));
+      await login(data.identifier, data.password);
       
-      const role = response.data.user.role;
-      if (role === 'ADMINISTRATOR') {
-        setLocation('/admin/dashboard');
-      } else if (role === 'ETHICS_OFFICER') {
-        setLocation('/ethics-dashboard');
-      } else if (role === 'FINANCIAL_ADMINISTRATOR' || role === 'FINANCIAL_OFFICER') {
-        setLocation('/finance-dashboard');
-      } else {
-        setLocation('/dashboard');
-      }
+      // The login function in AuthContext will handle the redirection
     } catch (err: any) {
       setError(err.response?.data?.message || 'Login failed. Please check your credentials.');
     } finally {

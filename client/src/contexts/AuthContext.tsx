@@ -1,132 +1,88 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import axios from 'axios';
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { api } from '@/lib/api';
+import { ExtendedUser, UserRole } from '@/types/user';
 
-// Define user types
-export type UserRole = 'MEMBER' | 'ADMINISTRATOR' | 'FINANCIAL_ADMINISTRATOR' | 'FINANCIAL_OFFICER' | 'FINANCIAL_AUDITOR' | 'ETHICS_OFFICER';
-
-export interface User {
-  id: number;
-  username: string;
-  email: string;
-  role: UserRole;
-  membershipId?: string;
-  firstName?: string;
-  lastName?: string;
-}
-
-// Define context type
 interface AuthContextType {
-  user: User | null;
-  isLoading: boolean;
-  error: string | null;
-  login: (identifier: string, password: string) => Promise<void>;
-  logout: () => void;
+  user: ExtendedUser | null;
+  setUser: (user: ExtendedUser | null) => void;
+  loading: boolean;
   isAuthenticated: boolean;
-  hasRole: (roles: UserRole | UserRole[]) => boolean;
+  hasRole: (role: UserRole) => boolean;
+  logout: () => void;
+  login: (identifier: string, password: string) => Promise<void>;
 }
 
-// Create context
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const AuthContext = createContext<AuthContextType>({
+  user: null,
+  setUser: () => {},
+  loading: true,
+  isAuthenticated: false,
+  hasRole: () => false,
+  logout: () => {},
+  login: async () => {},
+});
 
-// Provider component
-interface AuthProviderProps {
-  children: ReactNode;
-}
+export const useAuth = () => useContext(AuthContext);
 
-export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
-  
-  useEffect(() => {
-    // Try to get user from localStorage on initial load
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      try {
-        setUser(JSON.parse(storedUser));
-      } catch (error) {
-        console.error('Failed to parse stored user data:', error);
-        localStorage.removeItem('user');
-      }
-    }
-    
-    // Check if session is valid
-    const validateSession = async () => {
-      try {
-        await axios.get('/api/auth/session');
-        // If successful, session is valid
-      } catch (error) {
-        // If server returns 401/403, session is invalid
-        setUser(null);
-        localStorage.removeItem('user');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
-    validateSession();
-  }, []);
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [user, setUser] = useState<ExtendedUser | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const isAuthenticated = !!user;
+  const hasRole = (role: UserRole) => user?.role === role;
   
   const login = async (identifier: string, password: string) => {
-    setIsLoading(true);
-    setError(null);
-    
     try {
-      const response = await axios.post('/api/auth/login', { identifier, password });
-      const userData = response.data.user;
+      const response = await api.post('/api/auth/login', { identifier, password });
+      const { user: userData } = response.data;
       
-      setUser(userData);
+      // Store user data in localStorage
       localStorage.setItem('user', JSON.stringify(userData));
-    } catch (error: any) {
-      setError(error.response?.data?.message || 'Login failed');
-      throw error;
-    } finally {
-      setIsLoading(false);
-    }
-  };
-  
-  const logout = async () => {
-    setIsLoading(true);
-    
-    try {
-      await axios.post('/api/auth/logout');
-    } catch (error) {
-      console.error('Logout error:', error);
-    } finally {
-      setUser(null);
-      localStorage.removeItem('user');
-      setIsLoading(false);
-    }
-  };
-  
-  const hasRole = (roles: UserRole | UserRole[]) => {
-    if (!user) return false;
-    
-    if (Array.isArray(roles)) {
-      return roles.includes(user.role);
-    }
-    
-    return user.role === roles;
-  };
-  
-  const value = {
-    user,
-    isLoading,
-    error,
-    login,
-    logout,
-    isAuthenticated: !!user,
-    hasRole
-  };
-  
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-};
+      setUser(userData);
 
-// Custom hook for using auth context
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
+      // Redirect based on user role
+      if (userData.role === 'ADMINISTRATOR') {
+        window.location.href = '/admin/dashboard';
+      } else if (userData.role === 'ETHICS_OFFICER') {
+        window.location.href = '/ethics-dashboard';
+      } else if (userData.role === 'FINANCIAL_ADMINISTRATOR' || userData.role === 'FINANCIAL_OFFICER') {
+        window.location.href = '/finance-dashboard';
+      } else {
+        window.location.href = '/dashboard';
+      }
+    } catch (error) {
+      console.error('Login failed:', error);
+      throw error;
+    }
+  };
+
+  const logout = () => {
+    setUser(null);
+    localStorage.removeItem('user');
+    window.location.href = '/login';
+  };
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const userData = localStorage.getItem('user');
+        if (userData) {
+          setUser(JSON.parse(userData));
+        }
+      } catch (error) {
+        console.error('Auth check failed:', error);
+        localStorage.removeItem('user');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    checkAuth();
+  }, []);
+
+  return (
+    <AuthContext.Provider value={{ user, setUser, loading, isAuthenticated, hasRole, logout, login }}>
+      {children}
+    </AuthContext.Provider>
+  );
 };

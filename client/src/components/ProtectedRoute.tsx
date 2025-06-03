@@ -1,39 +1,41 @@
 import React from 'react';
-import { Redirect } from 'wouter';
-import { useAuth, UserRole } from '../contexts/AuthContext';
+import { Route, Redirect, RouteProps } from 'wouter';
+import { useAuth } from '../contexts/AuthContext';
+import { UserRole } from '@/types/user';
 
-interface ProtectedRouteProps {
-  component: React.FC;
-  roles?: UserRole | UserRole[];
+interface ProtectedRouteProps extends RouteProps {
+  component: React.ComponentType<any>;
+  roles?: UserRole[];
 }
 
-const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ 
-  component: Component, 
-  roles 
+const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
+  component: Component,
+  roles,
+  ...rest
 }) => {
-  const { isAuthenticated, isLoading, hasRole } = useAuth();
+  const { isAuthenticated, hasRole } = useAuth();
 
-  // Show loading state while authentication is being checked
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600"></div>
-      </div>
-    );
-  }
+  return (
+    <Route
+      {...rest}
+      component={(props: any) => {
+        // Check if user is authenticated
+        if (!isAuthenticated) {
+          // Redirect to login if not authenticated
+          return <Redirect to="/login" />;
+        }
 
-  // Redirect to login if not authenticated
-  if (!isAuthenticated) {
-    return <Redirect to="/login" />;
-  }
+        // Check if user has required role
+        if (roles && !roles.some(role => hasRole(role))) {
+          // Redirect to unauthorized page if user doesn't have required role
+          return <Redirect to="/unauthorized" />;
+        }
 
-  // Check role permissions if roles are specified
-  if (roles && !hasRole(roles)) {
-    return <Redirect to="/unauthorized" />;
-  }
-
-  // Render the protected component
-  return <Component />;
+        // Render the protected component
+        return <Component {...props} />;
+      }}
+    />
+  );
 };
 
 export default ProtectedRoute;

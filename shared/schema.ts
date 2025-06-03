@@ -1,17 +1,78 @@
-import { pgTable, text, serial, integer, boolean, timestamp, json, pgEnum, uniqueIndex, foreignKey, numeric, uuid, primaryKey } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, json, pgEnum, uniqueIndex, foreignKey, numeric, uuid, primaryKey, date, jsonb } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
+// Define enums with proper typing
+const membershipTypes = ['INDIVIDUAL', 'CORPORATE'] as const;
+const membershipStatuses = ['PENDING', 'ACTIVE', 'EXPIRED', 'SUSPENDED'] as const;
+const roles = ['MEMBER', 'ADMINISTRATOR', 'FINANCIAL_ADMINISTRATOR', 'FINANCIAL_OFFICER', 'FINANCIAL_AUDITOR', 'ETHICS_OFFICER'] as const;
+const paymentStatuses = ['PENDING', 'PAID', 'FAILED', 'REFUNDED'] as const;
+const eiarApplicationStatuses = [
+  'DRAFT',
+  'SUBMITTED',
+  'INITIAL_REVIEW',
+  'TECHNICAL_REVIEW',
+  'ETHICS_REVIEW',
+  'REVISION_REQUIRED',
+  'APPROVED',
+  'REJECTED'
+] as const;
+const projectSectors = [
+  'RESIDENTIAL',
+  'COMMERCIAL',
+  'INDUSTRIAL',
+  'INFRASTRUCTURE',
+  'INSTITUTIONAL',
+  'AGRICULTURAL',
+  'RECREATIONAL'
+] as const;
+const impactSignificances = [
+  'NEGLIGIBLE',
+  'MINOR',
+  'MODERATE',
+  'MAJOR',
+  'SEVERE'
+] as const;
+
 // Enums
-export const membershipTypeEnum = pgEnum('membership_type', ['STUDENT', 'ASSOCIATE', 'PROFESSIONAL', 'FELLOW']);
-export const membershipStatusEnum = pgEnum('membership_status', ['PENDING', 'ACTIVE', 'EXPIRED', 'SUSPENDED']);
-export const roleEnum = pgEnum('role', ['MEMBER', 'ADMINISTRATOR', 'FINANCIAL_ADMINISTRATOR', 'FINANCIAL_OFFICER', 'FINANCIAL_AUDITOR', 'ETHICS_OFFICER']);
+export const membershipTypeEnum = pgEnum('membership_type', membershipTypes);
+export const membershipStatusEnum = pgEnum('membership_status', membershipStatuses);
+export const roleEnum = pgEnum('role', roles);
 export const applicationTypeEnum = pgEnum('application_type', ['SAR', 'EIAR']);
 export const applicantTypeEnum = pgEnum('applicant_type', ['INDIVIDUAL', 'CORPORATE']);
 export const applicationStatusEnum = pgEnum('application_status', ['DRAFT', 'SUBMITTED', 'UNDER_REVIEW', 'APPROVED', 'REJECTED', 'PAYMENT_PENDING', 'COMPLETED']);
 export const complaintStatusEnum = pgEnum('complaint_status', ['RECEIVED', 'INVESTIGATING', 'RESOLVED', 'CLOSED']);
 export const electionStatusEnum = pgEnum('election_status', ['SETUP', 'NOMINATIONS', 'VOTING', 'CLOSED']);
 export const transactionTypeEnum = pgEnum('transaction_type', ['SUBSCRIPTION', 'APPLICATION_FEE', 'CREDIT_PURCHASE', 'OTHER']);
+
+// SAR Application Types
+export const projectTypeEnum = {
+  RESIDENTIAL: 'RESIDENTIAL',
+  COMMERCIAL: 'COMMERCIAL',
+  INDUSTRIAL: 'INDUSTRIAL',
+  MIXED_USE: 'MIXED_USE',
+  INFRASTRUCTURE: 'INFRASTRUCTURE',
+  INSTITUTIONAL: 'INSTITUTIONAL',
+  AGRICULTURAL: 'AGRICULTURAL',
+  RECREATIONAL: 'RECREATIONAL',
+  OTHER: 'OTHER'
+} as const;
+
+export const sarApplicationStatusEnum = {
+  DRAFT: 'DRAFT',
+  SUBMITTED: 'SUBMITTED',
+  UNDER_REVIEW: 'UNDER_REVIEW',
+  APPROVED: 'APPROVED',
+  REJECTED: 'REJECTED',
+  WITHDRAWN: 'WITHDRAWN'
+} as const;
+
+export const paymentStatusEnum = pgEnum('payment_status', paymentStatuses);
+
+// EIAR Application Types
+export const eiarApplicationStatusEnum = pgEnum('eiar_application_status', eiarApplicationStatuses);
+export const projectSectorEnum = pgEnum('project_sector', projectSectors);
+export const impactSignificanceEnum = pgEnum('impact_significance', impactSignificances);
 
 // Users table
 export const users = pgTable('users', {
@@ -439,6 +500,132 @@ export const news = pgTable('news', {
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
 
+// SAR Application Tables
+export const sarApplications = pgTable('sar_applications', {
+  id: serial('id').primaryKey(),
+  applicantType: applicantTypeEnum('applicant_type').notNull(),
+  memberId: integer('member_id').references(() => members.id),
+  organizationName: text('organization_name'),
+  contactPerson: text('contact_person'),
+  contactPersonPosition: text('contact_person_position'),
+  contactEmail: text('contact_email').notNull(),
+  contactPhone: text('contact_phone').notNull(),
+  projectTitle: text('project_title').notNull(),
+  projectType: text('project_type').notNull(),
+  projectTypeOther: text('project_type_other'),
+  projectDescription: text('project_description').notNull(),
+  proposedLandUse: text('proposed_land_use').notNull(),
+  expectedStartDate: timestamp('expected_start_date').notNull(),
+  estimatedDuration: integer('estimated_duration').notNull(), // in months
+  siteAddress: text('site_address').notNull(),
+  latitude: text('latitude').notNull(),
+  longitude: text('longitude').notNull(),
+  plotNumber: text('plot_number').notNull(),
+  cadastralZone: text('cadastral_zone').notNull(),
+  siteArea: numeric('site_area').notNull(), // in square meters
+  existingLandUse: text('existing_land_use').notNull(),
+  surroundingLandUses: text('surrounding_land_uses').notNull(),
+  nearestLandmarks: text('nearest_landmarks').notNull(),
+  topography: text('topography').notNull(),
+  hydrology: text('hydrology').notNull(),
+  geology: text('geology').notNull(),
+  vegetation: text('vegetation').notNull(),
+  existingInfrastructure: text('existing_infrastructure').notNull(),
+  socioEconomicContext: text('socio_economic_context').notNull(),
+  environmentalSensitivities: text('environmental_sensitivities').notNull(),
+  status: applicationStatusEnum('status').notNull().default('DRAFT'),
+  applicationFee: numeric('application_fee').notNull(),
+  paymentStatus: paymentStatusEnum('payment_status').notNull().default('PENDING'),
+  paymentId: text('payment_id'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow()
+});
+
+export const sarApplicationDocuments = pgTable('sar_application_documents', {
+  id: serial('id').primaryKey(),
+  applicationId: integer('application_id').references(() => sarApplications.id).notNull(),
+  documentType: text('document_type').notNull(),
+  fileName: text('file_name').notNull(),
+  fileUrl: text('file_url').notNull(),
+  fileSize: integer('file_size').notNull(),
+  mimeType: text('mime_type').notNull(),
+  uploadedAt: timestamp('uploaded_at').notNull().defaultNow()
+});
+
+// EIAR Applications
+export const eiarApplications = pgTable('eiar_applications', {
+  id: serial('id').primaryKey(),
+  applicationId: text('application_id').notNull().unique(),
+  applicantType: applicantTypeEnum('applicant_type').notNull(),
+  applicantId: integer('applicant_id').notNull().references(() => users.id),
+  organizationName: text('organization_name'),
+  contactPerson: text('contact_person'),
+  contactPersonTitle: text('contact_person_title'),
+  contactEmail: text('contact_email').notNull(),
+  contactPhone: text('contact_phone').notNull(),
+  projectTitle: text('project_title').notNull(),
+  projectSector: text('project_sector').notNull(),
+  projectDescription: text('project_description').notNull(),
+  proposedLandUse: text('proposed_land_use').notNull(),
+  projectStartDate: date('project_start_date').notNull(),
+  projectDuration: integer('project_duration').notNull(),
+  eiaStudyScope: text('eia_study_scope'),
+  siteAddress: text('site_address').notNull(),
+  latitude: text('latitude').notNull(),
+  longitude: text('longitude').notNull(),
+  plotNumber: text('plot_number').notNull(),
+  cadastralZone: text('cadastral_zone').notNull(),
+  siteArea: numeric('site_area').notNull(),
+  siteContext: text('site_context').notNull(),
+  ecologicalLandmarks: text('ecological_landmarks').notNull(),
+  physicalEnvironment: jsonb('physical_environment').notNull(),
+  biologicalEnvironment: jsonb('biological_environment').notNull(),
+  socioEconomicEnvironment: jsonb('socio_economic_environment').notNull(),
+  projectAlternatives: text('project_alternatives').notNull(),
+  potentialImpacts: jsonb('potential_impacts').notNull(),
+  mitigationMeasures: jsonb('mitigation_measures').notNull(),
+  monitoringPlan: jsonb('monitoring_plan').notNull(),
+  managementPlan: text('management_plan').notNull(),
+  emergencyResponsePlan: text('emergency_response_plan').notNull(),
+  responsibleParties: jsonb('responsible_parties').notNull(),
+  publicConsultation: jsonb('public_consultation').notNull(),
+  declaration: boolean('declaration').notNull(),
+  status: eiarApplicationStatusEnum('status').notNull().default('DRAFT'),
+  paymentStatus: paymentStatusEnum('payment_status').notNull().default('PENDING'),
+  applicationFee: numeric('application_fee').notNull(),
+  adminFee: numeric('admin_fee').notNull(),
+  totalFee: numeric('total_fee').notNull(),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  submittedAt: timestamp('submitted_at'),
+  approvedAt: timestamp('approved_at'),
+  rejectedAt: timestamp('rejected_at'),
+  rejectionReason: text('rejection_reason'),
+  version: integer('version').notNull().default(1),
+});
+
+export const eiarDocuments = pgTable('eiar_documents', {
+  id: serial('id').primaryKey(),
+  applicationId: integer('application_id').notNull().references(() => eiarApplications.id),
+  documentType: text('document_type').notNull(),
+  fileName: text('file_name').notNull(),
+  fileUrl: text('file_url').notNull(),
+  fileSize: integer('file_size').notNull(),
+  mimeType: text('mime_type').notNull(),
+  uploadedAt: timestamp('uploaded_at').notNull().defaultNow(),
+});
+
+export const eiarReviews = pgTable('eiar_reviews', {
+  id: serial('id').primaryKey(),
+  applicationId: integer('application_id').notNull().references(() => eiarApplications.id),
+  reviewerId: integer('reviewer_id').notNull().references(() => users.id),
+  reviewStage: text('review_stage').notNull(),
+  comments: jsonb('comments').notNull(),
+  status: text('status').notNull(),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
@@ -542,3 +729,8 @@ export type Transaction = typeof transactions.$inferSelect;
 export type Announcement = typeof announcements.$inferSelect;
 export type Event = typeof events.$inferSelect;
 export type News = typeof news.$inferSelect;
+
+export type ProjectType = typeof projectTypeEnum[keyof typeof projectTypeEnum];
+export type ApplicantType = typeof applicantTypeEnum.enumValues[number];
+export type PaymentStatus = typeof paymentStatusEnum[keyof typeof paymentStatusEnum];
+export type SarApplicationStatus = typeof applicationStatusEnum.enumValues[number];

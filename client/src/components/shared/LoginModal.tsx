@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
+import { useForm, ControllerRenderProps } from "react-hook-form";
 import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/hooks/use-auth";
+import { useAuth } from "@/contexts/AuthContext";
 
 import {
   Dialog,
@@ -41,12 +41,18 @@ const formSchema = z.object({
   rememberMe: z.boolean().optional(),
 });
 
+type FormData = z.infer<typeof formSchema>;
+
+interface FormFieldProps {
+  field: ControllerRenderProps<FormData, "identifier" | "password" | "rememberMe">;
+}
+
 export default function LoginModal({ isOpen, onClose, onRegisterClick }: LoginModalProps) {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const { login } = useAuth();
 
-  const form = useForm<z.infer<typeof formSchema>>({
+  const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       identifier: "",
@@ -55,7 +61,7 @@ export default function LoginModal({ isOpen, onClose, onRegisterClick }: LoginMo
     },
   });
 
-  async function onSubmit(values: z.infer<typeof formSchema>) {
+  async function onSubmit(values: FormData) {
     setIsLoading(true);
     try {
       await login(values.identifier, values.password);

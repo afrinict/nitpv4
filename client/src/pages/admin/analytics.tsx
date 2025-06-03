@@ -1,5 +1,20 @@
-import React, { useState } from 'react';
-import { FaUsers, FaFileAlt, FaCalendarAlt, FaMoneyBillWave, FaChartLine, FaChartBar, FaChartPie, FaDownload } from 'react-icons/fa';
+import React, { useState, useEffect } from 'react';
+import { FaUsers, FaFileAlt, FaCalendarAlt, FaMoneyBillWave, FaChartLine, FaChartBar, FaChartPie, FaDownload, FaFilter } from 'react-icons/fa';
+import {
+  LineChart,
+  Line,
+  BarChart,
+  Bar,
+  PieChart,
+  Pie,
+  Cell,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from 'recharts';
 
 interface AnalyticsData {
   overview: {
@@ -15,6 +30,7 @@ interface AnalyticsData {
     activeUsers: number;
     inactiveUsers: number;
     userGrowth: number;
+    userTrend: Array<{ date: string; count: number }>;
   };
   applicationStats: {
     sarApplications: number;
@@ -22,12 +38,14 @@ interface AnalyticsData {
     approvedApplications: number;
     rejectedApplications: number;
     pendingApplications: number;
+    applicationTrend: Array<{ date: string; sar: number; eiar: number }>;
   };
   revenueStats: {
     totalRevenue: number;
     monthlyRevenue: number;
     yearlyRevenue: number;
     revenueGrowth: number;
+    revenueByType: Array<{ type: string; amount: number }>;
   };
 }
 
@@ -44,26 +62,50 @@ const mockData: AnalyticsData = {
     newUsers: 150,
     activeUsers: 980,
     inactiveUsers: 270,
-    userGrowth: 12.5
+    userGrowth: 12.5,
+    userTrend: [
+      { date: 'Jan', count: 100 },
+      { date: 'Feb', count: 120 },
+      { date: 'Mar', count: 150 },
+      { date: 'Apr', count: 180 },
+      { date: 'May', count: 200 },
+      { date: 'Jun', count: 250 }
+    ]
   },
   applicationStats: {
     sarApplications: 250,
     eiarApplications: 200,
     approvedApplications: 300,
     rejectedApplications: 75,
-    pendingApplications: 75
+    pendingApplications: 75,
+    applicationTrend: [
+      { date: 'Jan', sar: 20, eiar: 15 },
+      { date: 'Feb', sar: 25, eiar: 18 },
+      { date: 'Mar', sar: 30, eiar: 22 },
+      { date: 'Apr', sar: 35, eiar: 25 },
+      { date: 'May', sar: 40, eiar: 30 },
+      { date: 'Jun', sar: 45, eiar: 35 }
+    ]
   },
   revenueStats: {
     totalRevenue: 2500000,
     monthlyRevenue: 250000,
     yearlyRevenue: 3000000,
-    revenueGrowth: 8.5
+    revenueGrowth: 8.5,
+    revenueByType: [
+      { type: 'Membership', amount: 1200000 },
+      { type: 'SAR Applications', amount: 750000 },
+      { type: 'EIAR Applications', amount: 550000 }
+    ]
   }
 };
+
+const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
 
 const Analytics = () => {
   const [timeRange, setTimeRange] = useState<'week' | 'month' | 'year'>('month');
   const [data] = useState<AnalyticsData>(mockData);
+  const [isLoading, setIsLoading] = useState(false);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-NG', {
@@ -78,53 +120,46 @@ const Analytics = () => {
     return `${value > 0 ? '+' : ''}${value}%`;
   };
 
+  const handleExport = () => {
+    setIsLoading(true);
+    // Simulate export delay
+    setTimeout(() => {
+      setIsLoading(false);
+      // Add actual export logic here
+    }, 1000);
+  };
+
   return (
     <div className="p-6">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-800 dark:text-white">Analytics Dashboard</h1>
-        <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-          Monitor website performance, user engagement, and business metrics
-        </p>
-      </div>
-
-      {/* Time Range Selector */}
       <div className="mb-6 flex justify-between items-center">
-        <div className="flex space-x-2">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-800 dark:text-white">Analytics Dashboard</h1>
+          <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+            Monitor website performance, user engagement, and business metrics
+          </p>
+        </div>
+        <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2">
+            <FaFilter className="text-gray-500" />
+            <select
+              className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md px-3 py-2 text-sm"
+              value={timeRange}
+              onChange={(e) => setTimeRange(e.target.value as 'week' | 'month' | 'year')}
+            >
+              <option value="week">Last Week</option>
+              <option value="month">Last Month</option>
+              <option value="year">Last Year</option>
+            </select>
+          </div>
           <button
-            onClick={() => setTimeRange('week')}
-            className={`px-4 py-2 rounded-md text-sm font-medium ${
-              timeRange === 'week'
-                ? 'bg-blue-600 text-white'
-                : 'bg-white text-gray-700 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700'
-            }`}
+            onClick={handleExport}
+            disabled={isLoading}
+            className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
           >
-            Week
-          </button>
-          <button
-            onClick={() => setTimeRange('month')}
-            className={`px-4 py-2 rounded-md text-sm font-medium ${
-              timeRange === 'month'
-                ? 'bg-blue-600 text-white'
-                : 'bg-white text-gray-700 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700'
-            }`}
-          >
-            Month
-          </button>
-          <button
-            onClick={() => setTimeRange('year')}
-            className={`px-4 py-2 rounded-md text-sm font-medium ${
-              timeRange === 'year'
-                ? 'bg-blue-600 text-white'
-                : 'bg-white text-gray-700 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700'
-            }`}
-          >
-            Year
+            <FaDownload />
+            <span>{isLoading ? 'Exporting...' : 'Export Report'}</span>
           </button>
         </div>
-        <button className="px-4 py-2 bg-white text-gray-700 rounded-md text-sm font-medium hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 flex items-center space-x-2">
-          <FaDownload />
-          <span>Export Report</span>
-        </button>
       </div>
 
       {/* Overview Cards */}
@@ -184,7 +219,7 @@ const Analytics = () => {
         </div>
       </div>
 
-      {/* Detailed Statistics */}
+      {/* Charts and Detailed Statistics */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* User Statistics */}
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
@@ -211,8 +246,17 @@ const Analytics = () => {
               </span>
             </div>
           </div>
-          <div className="mt-6 h-64 bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center">
-            <FaChartLine className="h-12 w-12 text-gray-400 dark:text-gray-500" />
+          <div className="mt-6 h-64">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={data.userStats.userTrend}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="date" />
+                <YAxis />
+                <Tooltip />
+                <Legend />
+                <Line type="monotone" dataKey="count" stroke="#8884d8" />
+              </LineChart>
+            </ResponsiveContainer>
           </div>
         </div>
 
@@ -241,8 +285,18 @@ const Analytics = () => {
               <span className="text-sm font-medium text-gray-900 dark:text-white">{data.applicationStats.pendingApplications}</span>
             </div>
           </div>
-          <div className="mt-6 h-64 bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center">
-            <FaChartBar className="h-12 w-12 text-gray-400 dark:text-gray-500" />
+          <div className="mt-6 h-64">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={data.applicationStats.applicationTrend}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="date" />
+                <YAxis />
+                <Tooltip />
+                <Legend />
+                <Bar dataKey="sar" fill="#8884d8" />
+                <Bar dataKey="eiar" fill="#82ca9d" />
+              </BarChart>
+            </ResponsiveContainer>
           </div>
         </div>
 
@@ -271,8 +325,26 @@ const Analytics = () => {
               </span>
             </div>
           </div>
-          <div className="mt-6 h-64 bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center">
-            <FaChartPie className="h-12 w-12 text-gray-400 dark:text-gray-500" />
+          <div className="mt-6 h-64">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={data.revenueStats.revenueByType}
+                  dataKey="amount"
+                  nameKey="type"
+                  cx="50%"
+                  cy="50%"
+                  outerRadius={80}
+                  label
+                >
+                  {data.revenueStats.revenueByType.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip formatter={(value) => formatCurrency(value as number)} />
+                <Legend />
+              </PieChart>
+            </ResponsiveContainer>
           </div>
         </div>
 

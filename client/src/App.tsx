@@ -24,6 +24,7 @@ import MemberTools from "./pages/member-tools";
 import Chat from "./pages/chat";
 import Directory from "./pages/directory";
 import Elections from "./pages/elections";
+import SarApplication from "./pages/sar/application";
 
 // Admin pages
 import AdminDashboard from "./pages/admin/dashboard";
@@ -60,6 +61,7 @@ const App = () => {
         <Route path="/profile" component={Profile} />
         <Route path="/subscription" component={Subscription} />
         <Route path="/applications" component={Applications} />
+        <Route path="/sar/application" component={SarApplication} />
         <Route path="/e-learning" component={ELearning} />
         <Route path="/member-tools" component={MemberTools} />
         <Route path="/chat" component={Chat} />
