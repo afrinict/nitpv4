@@ -28,16 +28,23 @@ export default defineConfig({
     assetsDir: 'assets',
     sourcemap: false,
     rollupOptions: {
+      external: ['@mui/material', '@emotion/react', '@emotion/styled'],
       output: {
         manualChunks: {
           vendor: ['react', 'react-dom', 'react-router-dom'],
           mui: ['@mui/material', '@emotion/react', '@emotion/styled'],
         },
+        globals: {
+          '@mui/material': 'MaterialUI',
+          '@emotion/react': 'emotionReact',
+          '@emotion/styled': 'emotionStyled'
+        }
       },
     },
   },
   optimizeDeps: {
     include: ['@mui/material', '@emotion/react', '@emotion/styled'],
+    exclude: ['@mui/material', '@emotion/react', '@emotion/styled']
   },
   base: '/',
 }); 
