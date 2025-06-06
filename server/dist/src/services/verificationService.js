@@ -4,6 +4,7 @@ import { RateLimiterMemory } from 'rate-limiter-flexible';
 import { logger } from '../utils/logger';
 import { redisClient } from '../config/redis';
 import { monitoringService } from '../utils/monitoring';
+import { query } from '../../utils/db';
 // Initialize Twilio client
 const twilioClient = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
 // Initialize email transporter
@@ -179,6 +180,88 @@ class VerificationService {
             logger.error('Error verifying phone OTP:', error);
             await monitoringService.trackFailedVerification('phone', phone, 'Verification error', ip);
             return { success: false, message: 'Failed to verify OTP' };
+        }
+    }
+    async submitSARApplication(data) {
+        try {
+            const result = await query(`INSERT INTO sar_applications (
+          user_id, certificate_url, identification_url, 
+          additional_documents, status, comments
+        ) VALUES ($1, $2, $3, $4, $5, $6) 
+        RETURNING *`, [
+                data.userId,
+                data.certificate,
+                data.identification,
+                data.additionalDocuments,
+                'PENDING',
+                data.comments
+            ]);
+            return result.rows[0];
+        }
+        catch (error) {
+            logger.error('Error submitting SAR application:', error);
+            throw error;
+        }
+    }
+    async submitEIARApplication(data) {
+        try {
+            const result = await query(`INSERT INTO eiar_applications (
+          user_id, certificate_url, identification_url, 
+          additional_documents, status, comments
+        ) VALUES ($1, $2, $3, $4, $5, $6) 
+        RETURNING *`, [
+                data.userId,
+                data.certificate,
+                data.identification,
+                data.additionalDocuments,
+                'PENDING',
+                data.comments
+            ]);
+            return result.rows[0];
+        }
+        catch (error) {
+            logger.error('Error submitting EIAR application:', error);
+            throw error;
+        }
+    }
+    async getSARApplications(userId) {
+        try {
+            const result = await query('SELECT * FROM sar_applications WHERE user_id = $1 ORDER BY created_at DESC', [userId]);
+            return result.rows;
+        }
+        catch (error) {
+            logger.error('Error fetching SAR applications:', error);
+            throw error;
+        }
+    }
+    async getEIARApplications(userId) {
+        try {
+            const result = await query('SELECT * FROM eiar_applications WHERE user_id = $1 ORDER BY created_at DESC', [userId]);
+            return result.rows;
+        }
+        catch (error) {
+            logger.error('Error fetching EIAR applications:', error);
+            throw error;
+        }
+    }
+    async updateSARStatus(id, status) {
+        try {
+            const result = await query('UPDATE sar_applications SET status = $1, updated_at = NOW() WHERE id = $2 RETURNING *', [status, id]);
+            return result.rows[0];
+        }
+        catch (error) {
+            logger.error('Error updating SAR application status:', error);
+            throw error;
+        }
+    }
+    async updateEIARStatus(id, status) {
+        try {
+            const result = await query('UPDATE eiar_applications SET status = $1, updated_at = NOW() WHERE id = $2 RETURNING *', [status, id]);
+            return result.rows[0];
+        }
+        catch (error) {
+            logger.error('Error updating EIAR application status:', error);
+            throw error;
         }
     }
 }

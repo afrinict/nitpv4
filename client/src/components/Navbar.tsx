@@ -1,3 +1,3 @@
-import { Navbar } from './shared/Navbar';
+import Navbar from './shared/Navbar';
 
 export default Navbar;

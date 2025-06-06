@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation } from 'wouter';
 import { FaSignOutAlt, FaSpinner } from 'react-icons/fa';
 
 const Logout = () => {
-  const navigate = useNavigate();
+  const [, setLocation] = useLocation();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [countdown, setCountdown] = useState(5);
 
@@ -11,15 +11,15 @@ const Logout = () => {
     const handleLogout = async () => {
       try {
         setIsLoggingOut(true);
-        // TODO: Implement actual logout logic here
-        // For example: await authService.logout();
+        // Clear any auth tokens
+        localStorage.removeItem('token');
         
         // Start countdown
         const timer = setInterval(() => {
           setCountdown((prev) => {
             if (prev <= 1) {
               clearInterval(timer);
-              navigate('/login');
+              setLocation('/login');
               return 0;
             }
             return prev - 1;
@@ -34,7 +34,7 @@ const Logout = () => {
     };
 
     handleLogout();
-  }, [navigate]);
+  }, [setLocation]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
@@ -61,7 +61,7 @@ const Logout = () => {
 
         <div className="mt-8">
           <button
-            onClick={() => navigate('/login')}
+            onClick={() => setLocation('/login')}
             className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
           >
             Go to Login Page

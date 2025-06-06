@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
+import { useAuth } from '../../contexts/AuthContext';
 import { FaSearch, FaFilter, FaEye, FaDownload, FaChartBar, FaExclamationTriangle } from 'react-icons/fa';
 
 interface Complaint {
@@ -34,6 +35,7 @@ interface DashboardStats {
 
 const EthicsDashboard = () => {
   const [, setLocation] = useLocation();
+  const { user, isAuthenticated } = useAuth();
   const [complaints, setComplaints] = useState<Complaint[]>([]);
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -43,14 +45,37 @@ const EthicsDashboard = () => {
   const [priorityFilter, setPriorityFilter] = useState<string>('all');
 
   useEffect(() => {
+    if (!isAuthenticated) {
+      setLocation('/login');
+      return;
+    }
+
+    if (user?.role !== 'ETHICS_OFFICER') {
+      setLocation('/unauthorized');
+      return;
+    }
+
     fetchDashboardData();
-  }, []);
+  }, [isAuthenticated, user, setLocation]);
 
   const fetchDashboardData = async () => {
     try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
       const [complaintsResponse, statsResponse] = await Promise.all([
-        fetch('/api/complaints'),
-        fetch('/api/complaints/stats'),
+        fetch('/api/complaints', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }),
+        fetch('/api/complaints/stats', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        })
       ]);
 
       if (!complaintsResponse.ok || !statsResponse.ok) {
@@ -59,7 +84,7 @@ const EthicsDashboard = () => {
 
       const [complaintsData, statsData] = await Promise.all([
         complaintsResponse.json(),
-        statsResponse.json(),
+        statsResponse.json()
       ]);
 
       setComplaints(complaintsData);

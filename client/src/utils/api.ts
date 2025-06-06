@@ -34,4 +34,23 @@ api.interceptors.response.use(
     }
     return Promise.reject(error);
   }
-); 
+);
+
+interface ApiRequestOptions extends RequestInit {
+  body?: string;
+}
+
+export const apiRequest = async (url: string, options: ApiRequestOptions = {}) => {
+  const defaultOptions: RequestInit = {
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  };
+
+  const response = await fetch(url, {
+    ...defaultOptions,
+    ...options,
+  });
+
+  return response;
+}; 

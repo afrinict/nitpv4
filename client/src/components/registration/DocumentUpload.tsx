@@ -1,198 +1,148 @@
 import React, { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { FaUpload, FaCheck, FaTimes } from 'react-icons/fa';
+import { useForm, Controller } from 'react-hook-form';
+import FileUpload from '../shared/FileUpload';
 
-interface DocumentUploadProps {
-  onNext: (data: any) => void;
-  onPrevious: () => void;
-  initialData?: any;
-  membershipCategory: string;
-}
+type DocumentFieldName = 
+  | 'passportPhoto'
+  | 'identificationDocument'
+  | 'academicCertificates'
+  | 'professionalLicense'
+  | 'studentId'
+  | 'recommendationLetter'
+  | 'businessRegistration'
+  | 'taxClearance';
 
 interface DocumentUploadForm {
-  passportPhoto: File | null;
-  identificationDocument: File | null;
+  passportPhoto: File;
+  identificationDocument: File;
   academicCertificates: File[];
-  professionalLicense?: File | null;
-  studentId?: File | null;
-  recommendationLetter?: File | null;
-  businessRegistration?: File | null;
-  taxClearance?: File | null;
+  professionalLicense?: File;
+  studentId?: File;
+  recommendationLetter?: File;
+  businessRegistration?: File;
+  taxClearance?: File;
+}
+
+interface DocumentUploadProps {
+  onSubmit: (data: DocumentUploadForm) => void;
+  isStudent?: boolean;
+  isProfessional?: boolean;
 }
 
 const DocumentUpload: React.FC<DocumentUploadProps> = ({
-  onNext,
-  onPrevious,
-  initialData,
-  membershipCategory,
+  onSubmit,
+  isStudent = false,
+  isProfessional = false
 }) => {
-  const { register, handleSubmit, formState: { errors }, watch } = useForm<DocumentUploadForm>({
-    defaultValues: initialData,
-  });
+  const { control, handleSubmit, formState: { errors } } = useForm<DocumentUploadForm>();
+  const [uploadedFiles, setUploadedFiles] = useState<Record<DocumentFieldName, File | File[]>>({} as Record<DocumentFieldName, File | File[]>);
 
-  const [uploadedFiles, setUploadedFiles] = useState<Record<string, File>>({});
-  const [uploadErrors, setUploadErrors] = useState<Record<string, string>>({});
-
-  const isFullMember = membershipCategory === 'full';
-  const isAssociateMember = membershipCategory === 'associate';
-  const isStudentMember = membershipCategory === 'student';
-  const isCorporateMember = membershipCategory === 'corporate';
-
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>, fieldName: string) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    // Validate file size (5MB limit)
-    if (file.size > 5 * 1024 * 1024) {
-      setUploadErrors({
-        ...uploadErrors,
-        [fieldName]: 'File size must be less than 5MB',
-      });
-      return;
-    }
-
-    // Validate file type
-    const allowedTypes = ['image/jpeg', 'image/png', 'application/pdf'];
-    if (!allowedTypes.includes(file.type)) {
-      setUploadErrors({
-        ...uploadErrors,
-        [fieldName]: 'File must be a JPEG, PNG, or PDF',
-      });
-      return;
-    }
-
-    setUploadedFiles({
-      ...uploadedFiles,
-      [fieldName]: file,
-    });
-    setUploadErrors({
-      ...uploadErrors,
-      [fieldName]: '',
-    });
+  const handleFileSelect = (field: DocumentFieldName) => (file: File | File[]) => {
+    setUploadedFiles(prev => ({
+      ...prev,
+      [field]: file
+    }));
   };
 
-  const onSubmit = (data: DocumentUploadForm) => {
-    onNext({ ...data, ...uploadedFiles });
-  };
+  const documentFields: Array<{
+    name: DocumentFieldName;
+    label: string;
+    accept: string;
+    required: boolean;
+    multiple?: boolean;
+  }> = [
+    {
+      name: 'passportPhoto',
+      label: 'Passport Photograph',
+      accept: 'image/*',
+      required: true
+    },
+    {
+      name: 'identificationDocument',
+      label: 'Identification Document',
+      accept: 'application/pdf,image/*',
+      required: true
+    },
+    {
+      name: 'academicCertificates',
+      label: 'Academic Certificates',
+      accept: 'application/pdf,image/*',
+      required: true,
+      multiple: true
+    }
+  ];
 
-  const renderFileUpload = (
-    fieldName: string,
-    label: string,
-    required: boolean = false,
-    multiple: boolean = false
-  ) => {
-    const file = uploadedFiles[fieldName];
-    const error = uploadErrors[fieldName];
-
-    return (
-      <div className="space-y-2">
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-          {label} {required && '*'}
-        </label>
-        <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 dark:border-gray-600 border-dashed rounded-md">
-          <div className="space-y-1 text-center">
-            {file ? (
-              <div className="flex items-center justify-center space-x-2">
-                <FaCheck className="h-5 w-5 text-green-500" />
-                <span className="text-sm text-gray-600 dark:text-gray-400">{file.name}</span>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setUploadedFiles({ ...uploadedFiles, [fieldName]: null });
-                    setUploadErrors({ ...uploadErrors, [fieldName]: '' });
-                  }}
-                  className="text-red-500 hover:text-red-700"
-                >
-                  <FaTimes className="h-4 w-4" />
-                </button>
-              </div>
-            ) : (
-              <>
-                <FaUpload className="mx-auto h-12 w-12 text-gray-400" />
-                <div className="flex text-sm text-gray-600 dark:text-gray-400">
-                  <label
-                    htmlFor={fieldName}
-                    className="relative cursor-pointer bg-white dark:bg-gray-800 rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500"
-                  >
-                    <span>Upload a file</span>
-                    <input
-                      id={fieldName}
-                      type="file"
-                      className="sr-only"
-                      {...register(fieldName, { required: required && 'This field is required' })}
-                      onChange={(e) => handleFileUpload(e, fieldName)}
-                      multiple={multiple}
-                    />
-                  </label>
-                  <p className="pl-1">or drag and drop</p>
-                </div>
-                <p className="text-xs text-gray-500 dark:text-gray-400">
-                  PNG, JPG, PDF up to 5MB
-                </p>
-              </>
-            )}
-          </div>
-        </div>
-        {error && <p className="mt-1 text-sm text-red-600 dark:text-red-400">{error}</p>}
-        {errors[fieldName] && (
-          <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors[fieldName].message}</p>
-        )}
-      </div>
+  if (isProfessional) {
+    documentFields.push(
+      {
+        name: 'professionalLicense',
+        label: 'Professional License',
+        accept: 'application/pdf,image/*',
+        required: true
+      },
+      {
+        name: 'businessRegistration',
+        label: 'Business Registration',
+        accept: 'application/pdf,image/*',
+        required: true
+      },
+      {
+        name: 'taxClearance',
+        label: 'Tax Clearance Certificate',
+        accept: 'application/pdf,image/*',
+        required: true
+      }
     );
-  };
+  }
+
+  if (isStudent) {
+    documentFields.push(
+      {
+        name: 'studentId',
+        label: 'Student ID Card',
+        accept: 'image/*',
+        required: true
+      },
+      {
+        name: 'recommendationLetter',
+        label: 'Recommendation Letter',
+        accept: 'application/pdf,image/*',
+        required: true
+      }
+    );
+  }
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
-          Document Upload
-        </h2>
-        <p className="text-gray-600 dark:text-gray-400 mb-8">
-          Please upload the required documents. All documents should be in PDF, JPEG, or PNG format and not exceed 5MB.
-        </p>
-      </div>
-
-      <div className="space-y-8">
-        {/* Passport Photo */}
-        {renderFileUpload('passportPhoto', 'Passport Photograph', true)}
-
-        {/* Identification Document */}
-        {renderFileUpload('identificationDocument', 'Identification Document (National ID, Driver\'s License, or International Passport)', true)}
-
-        {/* Academic Certificates */}
-        {renderFileUpload('academicCertificates', 'Academic Certificates', true, true)}
-
-        {/* Professional License (Full Members) */}
-        {isFullMember && renderFileUpload('professionalLicense', 'Professional License', true)}
-
-        {/* Student ID (Student Members) */}
-        {isStudentMember && renderFileUpload('studentId', 'Student ID Card', true)}
-
-        {/* Recommendation Letter (Student Members) */}
-        {isStudentMember && renderFileUpload('recommendationLetter', 'Letter of Recommendation from Department', true)}
-
-        {/* Business Registration (Corporate Members) */}
-        {isCorporateMember && renderFileUpload('businessRegistration', 'Business Registration Document', true)}
-
-        {/* Tax Clearance (Corporate Members) */}
-        {isCorporateMember && renderFileUpload('taxClearance', 'Tax Clearance Certificate', true)}
-      </div>
-
-      <div className="flex justify-between pt-6">
-        <button
-          type="button"
-          onClick={onPrevious}
-          className="bg-gray-300 dark:bg-gray-600 text-gray-800 dark:text-white px-6 py-2 rounded-md hover:bg-gray-400 dark:hover:bg-gray-500"
-        >
-          Previous
-        </button>
-        <button
-          type="submit"
-          className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-        >
-          Next
-        </button>
-      </div>
+      {documentFields.map(({ name, label, accept, required, multiple }) => (
+        <div key={name}>
+          <Controller
+            name={name}
+            control={control}
+            rules={{ required: required && 'This field is required' }}
+            render={({ field }) => (
+              <FileUpload
+                label={label}
+                accept={accept}
+                required={required}
+                multiple={multiple}
+                onFileSelect={handleFileSelect(name)}
+              />
+            )}
+          />
+          {errors[name] && (
+            <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+              {errors[name]?.message}
+            </p>
+          )}
+        </div>
+      ))}
+      <button
+        type="submit"
+        className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+      >
+        Submit Documents
+      </button>
     </form>
   );
 };

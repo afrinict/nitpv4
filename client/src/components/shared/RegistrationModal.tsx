@@ -23,28 +23,48 @@ export default function RegistrationModal({
 }: RegistrationModalProps) {
   const membershipTypes = [
     {
-      type: "student",
-      title: "Student",
-      description: "For currently enrolled students in urban planning programs.",
-      fee: getMembershipFee("STUDENT"),
+      type: "STUDENT",
+      title: "Student Membership",
+      description: "For students pursuing studies in town planning or related fields",
+      fee: getMembershipFee(),
+      features: [
+        "Access to student resources",
+        "Discounted event rates",
+        "Student networking opportunities",
+      ],
     },
     {
-      type: "associate",
-      title: "Associate",
-      description: "For recent graduates and junior planning professionals.",
-      fee: getMembershipFee("ASSOCIATE"),
+      type: "ASSOCIATE",
+      title: "Associate Membership",
+      description: "For professionals in related fields",
+      fee: getMembershipFee(),
+      features: [
+        "Access to professional resources",
+        "Networking opportunities",
+        "Professional development",
+      ],
     },
     {
-      type: "professional",
-      title: "Professional",
-      description: "For qualified urban planning professionals.",
-      fee: getMembershipFee("PROFESSIONAL"),
+      type: "PROFESSIONAL",
+      title: "Professional Membership",
+      description: "For qualified town planners",
+      fee: getMembershipFee(),
+      features: [
+        "Full access to all resources",
+        "Professional recognition",
+        "Career development support",
+      ],
     },
     {
-      type: "fellow",
-      title: "Fellow",
-      description: "For distinguished members with significant contributions to the field.",
-      fee: getMembershipFee("FELLOW"),
+      type: "FELLOW",
+      title: "Fellow Membership",
+      description: "For senior professionals with significant contributions",
+      fee: getMembershipFee(),
+      features: [
+        "Highest level of recognition",
+        "Leadership opportunities",
+        "Exclusive networking events",
+      ],
     },
   ];
 

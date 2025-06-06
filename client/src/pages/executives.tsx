@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'wouter';
 import Navbar from '../components/Navbar';
 
@@ -78,9 +78,11 @@ const executives: Executive[] = [
 ];
 
 const Executives = () => {
+  const [showLoginModal, setShowLoginModal] = useState(false);
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <Navbar />
+      <Navbar showLoginModal={() => setShowLoginModal(true)} />
       
       {/* Header Section - Adjusted padding-top to account for fixed navbar */}
       <div className="bg-primary relative overflow-hidden pt-20">

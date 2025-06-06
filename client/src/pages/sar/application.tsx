@@ -4,6 +4,15 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useMember } from '../../contexts/MemberContext';
 import { FiArrowLeft, FiArrowRight, FiUpload, FiMapPin, FiCalendar, FiFileText } from 'react-icons/fi';
 import { applicantTypeEnum, projectTypeEnum, sarApplicationStatusEnum, paymentStatusEnum } from '../../../../shared/schema';
+import {
+  Box,
+  Button,
+  Typography,
+  Alert,
+  CircularProgress,
+} from '@mui/material';
+import { useToast } from '@/hooks/useToast';
+import PaymentModal from '@/components/shared/PaymentModal';
 
 type ProjectType = typeof projectTypeEnum[keyof typeof projectTypeEnum];
 type ApplicantType = 'INDIVIDUAL' | 'CORPORATE';
@@ -84,6 +93,10 @@ const SarApplication: React.FC = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState<FormData>(initialFormData);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { showToast } = useToast();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
 
   useEffect(() => {
     if (member && user) {
@@ -115,17 +128,59 @@ const SarApplication: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
+    setLoading(true);
+    setError(null);
 
     try {
-      // TODO: Implement form submission
-      console.log('Form data:', formData);
-      setLocation('/sar/applications');
-    } catch (error) {
-      console.error('Error submitting form:', error);
+      // First, create the application
+      const response = await fetch('/api/sar/applications', {
+        method: 'POST',
+        body: JSON.stringify(formData),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to submit application');
+      }
+
+      // Show payment modal
+      setShowPaymentModal(true);
+    } catch (err: any) {
+      setError(err.message);
+      showToast('error', err.message);
     } finally {
-      setIsSubmitting(false);
+      setLoading(false);
     }
+  };
+
+  const handlePaymentSuccess = async (paymentIntent: any) => {
+    try {
+      // Update application with payment information
+      const response = await fetch('/api/sar/applications/payment', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          paymentIntentId: paymentIntent.id,
+          status: 'paid',
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update payment status');
+      }
+
+      showToast('success', 'Application submitted successfully');
+      setLocation('/dashboard');
+    } catch (err: any) {
+      showToast('error', err.message);
+    }
+  };
+
+  const handlePaymentError = (error: any) => {
+    showToast('error', error.message || 'Payment failed');
   };
 
   const renderStep1 = () => (
@@ -901,6 +956,16 @@ const SarApplication: React.FC = () => {
           </div>
         </div>
       </div>
+
+      <PaymentModal
+        open={showPaymentModal}
+        onClose={() => setShowPaymentModal(false)}
+        amount={50000} // SAR application fee
+        title="SAR Application Payment"
+        description="Please complete the payment to submit your SAR application"
+        onSuccess={handlePaymentSuccess}
+        onError={handlePaymentError}
+      />
     </div>
   );
 };

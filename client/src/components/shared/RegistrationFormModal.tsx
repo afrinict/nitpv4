@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { useForm, ControllerRenderProps } from "react-hook-form";
+import { useForm, Controller, ControllerRenderProps, FieldValues, Path } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import * as z from "zod";
 import { useToast } from "@/hooks/use-toast";
 import { api } from '@/lib/api';
 import ImageUpload from '../ImageUpload';
@@ -32,7 +32,6 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from '@/components/ui/label';
-import { Controller } from "react-hook-form";
 
 interface RegistrationFormModalProps {
   isOpen: boolean;
@@ -153,6 +152,11 @@ const verificationSchema = z.object({
 
 type VerificationFormData = z.infer<typeof verificationSchema>;
 
+// Update FieldProps type to be more specific
+type FieldProps<T extends FieldValues> = {
+  field: ControllerRenderProps<T, Path<T>>;
+};
+
 export default function RegistrationFormModal({
   isOpen,
   onClose,
@@ -210,6 +214,7 @@ export default function RegistrationFormModal({
       email: '',
       username: '',
       password: '',
+      confirmPassword: '',
     },
   });
 
@@ -218,10 +223,16 @@ export default function RegistrationFormModal({
     defaultValues: {
       firstName: '',
       lastName: '',
-      gender: 'MALE',
+      middleName: '',
       dateOfBirth: '',
-      phoneNumber: '',
+      gender: '',
+      nationality: 'Nigeria',
       address: '',
+      city: '',
+      state: '',
+      postalCode: '',
+      phoneNumber: '',
+      alternatePhone: '',
     },
   });
 
@@ -233,7 +244,7 @@ export default function RegistrationFormModal({
       field: '',
       startYear: '',
       endYear: '',
-      certificateFile: undefined,
+      certificateFile: '',
     },
   });
 
@@ -261,100 +272,39 @@ export default function RegistrationFormModal({
   });
 
   const handleAccountSubmit = async (data: AccountFormData) => {
-    try {
-      setIsSubmitting(true);
-      setFormData(prev => ({ ...prev, ...data }));
-      setCurrentStep("personal");
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "An error occurred. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
+    setFormData(prev => ({ ...prev, ...data }));
+    nextStep(data);
   };
 
   const handlePersonalSubmit = async (data: PersonalFormData) => {
-    try {
-      setIsSubmitting(true);
-      setFormData(prev => ({ ...prev, ...data }));
-      setCurrentStep("education");
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "An error occurred. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
+    setFormData(prev => ({ ...prev, ...data }));
+    nextStep(data);
   };
 
   const handleEducationSubmit = async (data: EducationFormData) => {
-    try {
-      setIsSubmitting(true);
-      setFormData(prev => ({ ...prev, ...data }));
-      setCurrentStep("professional");
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "An error occurred. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
+    setFormData(prev => ({ ...prev, ...data }));
+    nextStep(data);
   };
 
   const handleProfessionalSubmit = async (data: ProfessionalFormData) => {
-    try {
-      setIsSubmitting(true);
-      setFormData(prev => ({ ...prev, ...data }));
-      setCurrentStep("verification");
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "An error occurred. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
+    setFormData(prev => ({ ...prev, ...data }));
+    nextStep(data);
   };
 
   const handleVerificationSubmit = async (data: VerificationFormData) => {
-    try {
-      setIsSubmitting(true);
-      const response = await api.post("/api/auth/register", formData);
-      if (response.data.success) {
-        toast({
-          title: "Success",
-          description: "Registration completed successfully!",
-        });
-        onClose();
-      }
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "An error occurred during registration. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
+    setFormData(prev => ({ ...prev, ...data }));
+    nextStep(data);
   };
 
   const sendOtp = async (type: 'email' | 'phone') => {
-    setIsSendingOtp(true);
     try {
-      const response = await api.post(`/api/auth/send-otp`, {
+      setIsSendingOtp(true);
+      const response = await api.post(`/auth/send-otp`, {
         type,
-        email: formData.email,
-        phone: formData.phoneNumber,
+        identifier: type === 'email' ? formData.email : formData.phoneNumber,
       });
-      if (response.status === 200) {
+      
+      if (response.data.success) {
         setOtpSent(prev => ({ ...prev, [type]: true }));
         toast({
           title: "OTP Sent",
@@ -362,10 +312,9 @@ export default function RegistrationFormModal({
         });
       }
     } catch (error) {
-      console.error(`Error sending ${type} OTP:`, error);
       toast({
         title: "Error",
-        description: `Failed to send ${type} verification code. Please try again.`,
+        description: "Failed to send OTP. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -374,46 +323,28 @@ export default function RegistrationFormModal({
   };
 
   const nextStep = async (data: Partial<RegistrationFormData> | { emailOtp: string; phoneOtp: string }) => {
-    if (currentStep === "verification") {
-      try {
-        const response = await api.post('/api/auth/verify-otp', {
-          email: formData.email,
-          phone: formData.phoneNumber,
-          emailOtp: (data as { emailOtp: string }).emailOtp,
-          phoneOtp: (data as { phoneOtp: string }).phoneOtp,
-        });
-        if (response.status === 200) {
-          setCurrentStep("review");
-        }
-      } catch (error) {
-        console.error("Error verifying OTP:", error);
-        toast({
-          title: "Verification Failed",
-          description: "Invalid verification codes. Please try again.",
-          variant: "destructive",
-        });
-      }
-    } else {
-      setFormData(prev => ({ ...prev, ...data }));
-      switch (currentStep) {
-        case "account":
-          setCurrentStep("personal");
-          break;
-        case "personal":
-          setCurrentStep("education");
-          break;
-        case "education":
-          setCurrentStep("professional");
-          break;
-        case "professional":
-          setCurrentStep("verification");
-          break;
-        case "review":
-          setCurrentStep("documents");
-          break;
-        default:
-          break;
-      }
+    switch (currentStep) {
+      case "account":
+        setCurrentStep("personal");
+        break;
+      case "personal":
+        setCurrentStep("education");
+        break;
+      case "education":
+        setCurrentStep("professional");
+        break;
+      case "professional":
+        setCurrentStep("verification");
+        break;
+      case "verification":
+        setCurrentStep("documents");
+        break;
+      case "documents":
+        setCurrentStep("review");
+        break;
+      case "review":
+        await handleFinalSubmit();
+        break;
     }
   };
 
@@ -431,90 +362,63 @@ export default function RegistrationFormModal({
       case "verification":
         setCurrentStep("professional");
         break;
-      case "review":
+      case "documents":
         setCurrentStep("verification");
         break;
-      case "documents":
-        setCurrentStep("review");
-        break;
-      default:
+      case "review":
+        setCurrentStep("documents");
         break;
     }
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
   const handleProfilePictureUploaded = (urls: string[]) => {
-    setFormData(prev => ({
-      ...prev,
-      profilePicture: urls
-    }));
+    setFormData(prev => ({ ...prev, profilePicture: urls }));
   };
 
   const handleIdentificationDocumentsUploaded = (urls: string[]) => {
-    setFormData(prev => ({
-      ...prev,
-      identificationDocuments: [...prev.identificationDocuments, ...urls]
-    }));
+    setFormData(prev => ({ ...prev, identificationDocuments: urls }));
   };
 
   const handleAcademicDocumentsUploaded = (urls: string[]) => {
-    setFormData(prev => ({
-      ...prev,
-      academicDocuments: [...prev.academicDocuments, ...urls]
-    }));
+    setFormData(prev => ({ ...prev, academicDocuments: urls }));
   };
 
-  const handleFileChange = async (
-    e: React.ChangeEvent<HTMLInputElement>,
-    field: ControllerRenderProps<EducationFormData, 'certificateFile'>
-  ) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, field: { name: string }) => {
+    const files = e.target.files;
+    if (!files) return;
 
-    try {
-      const formData = new FormData();
-      formData.append('file', file);
-      
-      const response = await api.post('/api/upload', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
-
-      if (response.data.url) {
-        field.onChange(response.data.url);
+    if (field.name === 'certificateFile') {
+      const file = files[0];
+      if (file) {
+        setFormData(prev => ({ ...prev, [field.name]: file.name }));
       }
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to upload file. Please try again.",
-        variant: "destructive",
-      });
     }
   };
 
   const handleFinalSubmit = async () => {
     try {
       setIsSubmitting(true);
-      const response = await api.post("/api/auth/register", formData);
+      const response = await api.post('/auth/register', {
+        ...formData,
+        registrationType,
+      });
+
       if (response.data.success) {
         toast({
-          title: "Success",
-          description: "Registration completed successfully!",
+          title: "Registration Successful",
+          description: "Your account has been created successfully.",
         });
         onClose();
       }
     } catch (error) {
       toast({
         title: "Error",
-        description: "An error occurred during registration. Please try again.",
+        description: "Failed to register. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -541,7 +445,7 @@ export default function RegistrationFormModal({
               <FormField
                 control={accountForm.control}
                 name="email"
-                render={({ field }) => (
+                render={({ field }: FieldProps<AccountFormData>) => (
                   <FormItem>
                     <FormLabel>Email Address</FormLabel>
                     <FormControl>
@@ -565,7 +469,7 @@ export default function RegistrationFormModal({
               <FormField
                 control={accountForm.control}
                 name="username"
-                render={({ field }) => (
+                render={({ field }: FieldProps<AccountFormData>) => (
                   <FormItem>
                     <FormLabel>Username</FormLabel>
                     <FormControl>
@@ -582,7 +486,7 @@ export default function RegistrationFormModal({
               <FormField
                 control={accountForm.control}
                 name="password"
-                render={({ field }) => (
+                render={({ field }: FieldProps<AccountFormData>) => (
                   <FormItem>
                     <FormLabel>Password</FormLabel>
                     <FormControl>
@@ -600,7 +504,7 @@ export default function RegistrationFormModal({
               <FormField
                 control={accountForm.control}
                 name="confirmPassword"
-                render={({ field }) => (
+                render={({ field }: FieldProps<AccountFormData>) => (
                   <FormItem>
                     <FormLabel>Confirm Password</FormLabel>
                     <FormControl>
@@ -627,7 +531,7 @@ export default function RegistrationFormModal({
               <FormField
                 control={personalForm.control}
                 name="firstName"
-                render={({ field }) => (
+                render={({ field }: FieldProps<PersonalFormData>) => (
                   <FormItem>
                     <FormLabel>First Name</FormLabel>
                     <FormControl>
@@ -650,7 +554,7 @@ export default function RegistrationFormModal({
               <FormField
                 control={personalForm.control}
                 name="lastName"
-                render={({ field }) => (
+                render={({ field }: FieldProps<PersonalFormData>) => (
                   <FormItem>
                     <FormLabel>Last Name</FormLabel>
                     <FormControl>
@@ -663,7 +567,7 @@ export default function RegistrationFormModal({
               <FormField
                 control={personalForm.control}
                 name="middleName"
-                render={({ field }) => (
+                render={({ field }: FieldProps<PersonalFormData>) => (
                   <FormItem>
                     <FormLabel>Middle Name</FormLabel>
                     <FormControl>
@@ -676,7 +580,7 @@ export default function RegistrationFormModal({
               <FormField
                 control={personalForm.control}
                 name="dateOfBirth"
-                render={({ field }) => (
+                render={({ field }: FieldProps<PersonalFormData>) => (
                   <FormItem>
                     <FormLabel>Date of Birth</FormLabel>
                     <FormControl>
@@ -689,7 +593,7 @@ export default function RegistrationFormModal({
               <FormField
                 control={personalForm.control}
                 name="gender"
-                render={({ field }) => (
+                render={({ field }: FieldProps<PersonalFormData>) => (
                   <FormItem>
                     <FormLabel>Gender</FormLabel>
                     <Select
@@ -715,7 +619,7 @@ export default function RegistrationFormModal({
               <FormField
                 control={personalForm.control}
                 name="nationality"
-                render={({ field }) => (
+                render={({ field }: FieldProps<PersonalFormData>) => (
                   <FormItem>
                     <FormLabel>Nationality</FormLabel>
                     <Select
@@ -740,7 +644,7 @@ export default function RegistrationFormModal({
               <FormField
                 control={personalForm.control}
                 name="address"
-                render={({ field }) => (
+                render={({ field }: FieldProps<PersonalFormData>) => (
                   <FormItem>
                     <FormLabel>Street Address</FormLabel>
                     <FormControl>
@@ -753,7 +657,7 @@ export default function RegistrationFormModal({
               <FormField
                 control={personalForm.control}
                 name="city"
-                render={({ field }) => (
+                render={({ field }: FieldProps<PersonalFormData>) => (
                   <FormItem>
                     <FormLabel>City</FormLabel>
                     <FormControl>
@@ -766,7 +670,7 @@ export default function RegistrationFormModal({
               <FormField
                 control={personalForm.control}
                 name="state"
-                render={({ field }) => (
+                render={({ field }: FieldProps<PersonalFormData>) => (
                   <FormItem>
                     <FormLabel>State</FormLabel>
                     <Select
@@ -793,7 +697,7 @@ export default function RegistrationFormModal({
               <FormField
                 control={personalForm.control}
                 name="postalCode"
-                render={({ field }) => (
+                render={({ field }: FieldProps<PersonalFormData>) => (
                   <FormItem>
                     <FormLabel>Postal Code</FormLabel>
                     <FormControl>
@@ -806,7 +710,7 @@ export default function RegistrationFormModal({
               <FormField
                 control={personalForm.control}
                 name="phoneNumber"
-                render={({ field }) => (
+                render={({ field }: FieldProps<PersonalFormData>) => (
                   <FormItem>
                     <FormLabel>Phone Number</FormLabel>
                     <FormControl>
@@ -819,7 +723,7 @@ export default function RegistrationFormModal({
               <FormField
                 control={personalForm.control}
                 name="alternatePhone"
-                render={({ field }) => (
+                render={({ field }: FieldProps<PersonalFormData>) => (
                   <FormItem>
                     <FormLabel>Alternate Phone (optional)</FormLabel>
                     <FormControl>
@@ -846,7 +750,7 @@ export default function RegistrationFormModal({
               <FormField
                 control={educationForm.control}
                 name="institution"
-                render={({ field }) => (
+                render={({ field }: FieldProps<EducationFormData>) => (
                   <FormItem>
                     <FormLabel>Institution</FormLabel>
                     <FormControl>
@@ -869,7 +773,7 @@ export default function RegistrationFormModal({
               <FormField
                 control={educationForm.control}
                 name="degree"
-                render={({ field }) => (
+                render={({ field }: FieldProps<EducationFormData>) => (
                   <FormItem>
                     <FormLabel>Degree</FormLabel>
                     <FormControl>
@@ -882,7 +786,7 @@ export default function RegistrationFormModal({
               <FormField
                 control={educationForm.control}
                 name="field"
-                render={({ field }) => (
+                render={({ field }: FieldProps<EducationFormData>) => (
                   <FormItem>
                     <FormLabel>Field of Study</FormLabel>
                     <FormControl>
@@ -895,7 +799,7 @@ export default function RegistrationFormModal({
               <FormField
                 control={educationForm.control}
                 name="startYear"
-                render={({ field }) => (
+                render={({ field }: FieldProps<EducationFormData>) => (
                   <FormItem>
                     <FormLabel>Start Year</FormLabel>
                     <FormControl>
@@ -908,7 +812,7 @@ export default function RegistrationFormModal({
               <FormField
                 control={educationForm.control}
                 name="endYear"
-                render={({ field }) => (
+                render={({ field }: FieldProps<EducationFormData>) => (
                   <FormItem>
                     <FormLabel>End Year (or Expected)</FormLabel>
                     <FormControl>
@@ -921,7 +825,7 @@ export default function RegistrationFormModal({
               <FormField
                 control={educationForm.control}
                 name="certificateFile"
-                render={({ field }) => (
+                render={({ field }: FieldProps<EducationFormData>) => (
                   <FormItem>
                     <FormLabel>Certificate File</FormLabel>
                     <FormControl>
@@ -953,7 +857,7 @@ export default function RegistrationFormModal({
               <FormField
                 control={professionalForm.control}
                 name="organization"
-                render={({ field }) => (
+                render={({ field }: FieldProps<ProfessionalFormData>) => (
                   <FormItem>
                     <FormLabel>Organization</FormLabel>
                     <FormControl>
@@ -976,7 +880,7 @@ export default function RegistrationFormModal({
               <FormField
                 control={professionalForm.control}
                 name="position"
-                render={({ field }) => (
+                render={({ field }: FieldProps<ProfessionalFormData>) => (
                   <FormItem>
                     <FormLabel>Position</FormLabel>
                     <FormControl>
@@ -989,7 +893,7 @@ export default function RegistrationFormModal({
               <FormField
                 control={professionalForm.control}
                 name="startDate"
-                render={({ field }) => (
+                render={({ field }: FieldProps<ProfessionalFormData>) => (
                   <FormItem>
                     <FormLabel>Start Date</FormLabel>
                     <FormControl>
@@ -1002,7 +906,7 @@ export default function RegistrationFormModal({
               <FormField
                 control={professionalForm.control}
                 name="endDate"
-                render={({ field }) => (
+                render={({ field }: FieldProps<ProfessionalFormData>) => (
                   <FormItem>
                     <FormLabel>End Date (if applicable)</FormLabel>
                     <FormControl>
@@ -1015,7 +919,7 @@ export default function RegistrationFormModal({
               <FormField
                 control={professionalForm.control}
                 name="responsibilities"
-                render={({ field }) => (
+                render={({ field }: FieldProps<ProfessionalFormData>) => (
                   <FormItem>
                     <FormLabel>Responsibilities</FormLabel>
                     <FormControl>
@@ -1033,7 +937,7 @@ export default function RegistrationFormModal({
               <FormField
                 control={professionalForm.control}
                 name="professionalQualification"
-                render={({ field }) => (
+                render={({ field }: FieldProps<ProfessionalFormData>) => (
                   <FormItem>
                     <FormLabel>Professional Qualification</FormLabel>
                     <FormControl>
@@ -1046,7 +950,7 @@ export default function RegistrationFormModal({
               <FormField
                 control={professionalForm.control}
                 name="qualificationYear"
-                render={({ field }) => (
+                render={({ field }: FieldProps<ProfessionalFormData>) => (
                   <FormItem>
                     <FormLabel>Year Obtained</FormLabel>
                     <FormControl>
@@ -1059,7 +963,7 @@ export default function RegistrationFormModal({
               <FormField
                 control={professionalForm.control}
                 name="registrationNumber"
-                render={({ field }) => (
+                render={({ field }: FieldProps<ProfessionalFormData>) => (
                   <FormItem>
                     <FormLabel>Registration Number</FormLabel>
                     <FormControl>
@@ -1072,7 +976,7 @@ export default function RegistrationFormModal({
               <FormField
                 control={professionalForm.control}
                 name="bio"
-                render={({ field }) => (
+                render={({ field }: FieldProps<ProfessionalFormData>) => (
                   <FormItem>
                     <FormLabel>Professional Bio</FormLabel>
                     <FormControl>
@@ -1104,7 +1008,7 @@ export default function RegistrationFormModal({
               <FormField
                 control={verificationForm.control}
                 name="emailOtp"
-                render={({ field }) => (
+                render={({ field }: FieldProps<VerificationFormData>) => (
                   <FormItem>
                     <FormLabel>Email OTP</FormLabel>
                     <FormControl>
@@ -1128,7 +1032,7 @@ export default function RegistrationFormModal({
               <FormField
                 control={verificationForm.control}
                 name="phoneOtp"
-                render={({ field }) => (
+                render={({ field }: FieldProps<VerificationFormData>) => (
                   <FormItem>
                     <FormLabel>Phone OTP</FormLabel>
                     <FormControl>

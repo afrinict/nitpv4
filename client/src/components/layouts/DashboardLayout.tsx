@@ -8,6 +8,7 @@ import {
   Drill, MessageSquare, Users, VoteIcon, Bell, Mail,
   Menu, Search, LogOut
 } from "lucide-react";
+import { ExtendedUser } from '../../types/user';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -17,6 +18,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [location] = useLocation();
   const { user, logout } = useAuth();
+  const extendedUser = user as ExtendedUser;
 
   const navItems = [
     { href: "/dashboard", label: "Dashboard", icon: <Home className="h-6 w-6" /> },
@@ -77,16 +79,16 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                 <div>
                   <img 
                     className="inline-block h-10 w-10 rounded-full object-cover" 
-                    src={user?.member?.profilePicture || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"} 
+                    src={extendedUser?.member?.profilePicture || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"} 
                     alt="Profile" 
                   />
                 </div>
                 <div className="ml-3">
                   <p className="text-base font-medium text-neutral-700 dark:text-neutral-300 group-hover:text-neutral-900 dark:group-hover:text-white">
-                    {user?.member?.firstName} {user?.member?.lastName}
+                    {extendedUser?.member?.firstName} {extendedUser?.member?.lastName}
                   </p>
                   <p className="text-sm font-medium text-neutral-500 dark:text-neutral-400 group-hover:text-neutral-700 dark:group-hover:text-neutral-300">
-                    {user?.member?.type} Member
+                    {extendedUser?.member?.type} Member
                   </p>
                 </div>
               </div>

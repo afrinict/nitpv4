@@ -295,8 +295,8 @@ const FinancialDashboard: React.FC = () => {
                           <Typography variant="subtitle1" color="textSecondary">
                             {key}
                           </Typography>
-                          <Typography variant="h4">
-                            {typeof value === 'number' ? value.toFixed(2) : value}
+                          <Typography variant="body2" color="text.secondary">
+                            {typeof value === 'number' ? value.toFixed(2) : String(value)}
                           </Typography>
                         </Paper>
                       </Grid>

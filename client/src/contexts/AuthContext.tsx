@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { api } from '@/lib/api';
-import { ExtendedUser, UserRole } from '@/types/user';
+import { api } from '../lib/api';
+import { ExtendedUser, UserRole } from '../types/user';
 
 interface AuthContextType {
   user: ExtendedUser | null;
@@ -33,11 +33,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   
   const login = async (identifier: string, password: string) => {
     try {
-      const response = await api.post('/api/auth/login', { identifier, password });
+      const response = await api.post('/auth/login', { identifier, password });
       const { user: userData } = response.data;
       
-      // Store user data in localStorage
+      // Store user data and token in localStorage
       localStorage.setItem('user', JSON.stringify(userData));
+      if (response.data.token) {
+        localStorage.setItem('token', response.data.token);
+      }
       setUser(userData);
 
       // Redirect based on user role
@@ -50,7 +53,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } else {
         window.location.href = '/dashboard';
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Login failed:', error);
       throw error;
     }
@@ -59,6 +62,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const logout = () => {
     setUser(null);
     localStorage.removeItem('user');
+    localStorage.removeItem('token');
     window.location.href = '/login';
   };
 
@@ -72,6 +76,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } catch (error) {
         console.error('Auth check failed:', error);
         localStorage.removeItem('user');
+        localStorage.removeItem('token');
       } finally {
         setLoading(false);
       }

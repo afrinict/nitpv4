@@ -1,9 +1,5 @@
-import { useState } from "react";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { apiRequest } from "@/lib/queryClient";
-import { useToast } from "@/hooks/use-toast";
+import React, { useState } from 'react';
+import { apiRequest } from '../../utils/api';
 import { CheckCircle } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -20,201 +16,170 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 
-const complaintSchema = z.object({
-  name: z.string().min(1, { message: "Name is required" }),
-  email: z.string().email({ message: "Please enter a valid email address" }),
-  subject: z.string().min(1, { message: "Subject is required" }),
-  details: z.string().min(10, { message: "Please provide more details (minimum 10 characters)" }),
-  privacy: z.boolean().refine(val => val === true, {
-    message: "You must accept the privacy terms",
-  }),
-});
+interface EthicsFormData {
+  name: string;
+  email: string;
+  details: string;
+}
 
-type ComplaintFormValues = z.infer<typeof complaintSchema>;
-
-export default function EthicsSection() {
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const { toast } = useToast();
-
-  const form = useForm<ComplaintFormValues>({
-    resolver: zodResolver(complaintSchema),
-    defaultValues: {
-      name: "",
-      email: "",
-      subject: "",
-      details: "",
-      privacy: false,
-    },
+const EthicsSection: React.FC = () => {
+  const [formData, setFormData] = useState<EthicsFormData>({
+    name: '',
+    email: '',
+    details: ''
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
 
-  async function onSubmit(data: ComplaintFormValues) {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     setIsSubmitting(true);
+    setSubmitStatus('idle');
+
     try {
-      const response = await apiRequest("POST", "/api/ethics/complaints", {
-        complainantName: data.name,
-        complainantEmail: data.email,
-        subject: data.subject,
-        details: data.details,
+      const response = await apiRequest('/api/ethics/complaints', {
+        method: 'POST',
+        body: JSON.stringify({
+          complainantName: formData.name,
+          complainantEmail: formData.email,
+          details: formData.details
+        })
       });
 
-      if (!response.ok) {
-        throw new Error("Failed to submit complaint");
+      if (response.ok) {
+        setSubmitStatus('success');
+        setFormData({ name: '', email: '', details: '' });
+      } else {
+        setSubmitStatus('error');
       }
-
-      toast({
-        title: "Complaint Submitted",
-        description: "Your ethics complaint has been submitted successfully. We will review it and contact you if necessary.",
-      });
-
-      form.reset();
     } catch (error) {
-      console.error("Error submitting complaint:", error);
-      toast({
-        title: "Submission Failed",
-        description: "There was a problem submitting your complaint. Please try again later.",
-        variant: "destructive",
-      });
+      setSubmitStatus('error');
     } finally {
       setIsSubmitting(false);
     }
-  }
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
 
   return (
-    <section className="py-12 bg-white dark:bg-neutral-800">
+    <section className="bg-white dark:bg-gray-800 py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="lg:grid lg:grid-cols-2 lg:gap-8 items-center">
-          <div>
-            <h2 className="text-3xl font-bold text-primary dark:text-white">Ethics & Professional Conduct</h2>
-            <p className="mt-4 text-lg text-neutral-600 dark:text-neutral-300">
-              NITP is committed to upholding the highest standards of professional conduct in urban planning. 
-              If you have concerns about professional conduct, you can submit a complaint through our ethics portal.
-            </p>
-            <div className="mt-8">
-              <h3 className="text-xl font-semibold text-neutral-800 dark:text-white">Ethical Principles</h3>
-              <ul className="mt-4 space-y-3">
-                <li className="flex">
-                  <CheckCircle className="text-success mt-1 mr-2 h-5 w-5" />
-                  <span className="dark:text-neutral-300">Integrity in professional practice</span>
-                </li>
-                <li className="flex">
-                  <CheckCircle className="text-success mt-1 mr-2 h-5 w-5" />
-                  <span className="dark:text-neutral-300">Responsibility to the public interest</span>
-                </li>
-                <li className="flex">
-                  <CheckCircle className="text-success mt-1 mr-2 h-5 w-5" />
-                  <span className="dark:text-neutral-300">Professional competence and due care</span>
-                </li>
-                <li className="flex">
-                  <CheckCircle className="text-success mt-1 mr-2 h-5 w-5" />
-                  <span className="dark:text-neutral-300">Fairness, transparency and objectivity</span>
-                </li>
-                <li className="flex">
-                  <CheckCircle className="text-success mt-1 mr-2 h-5 w-5" />
-                  <span className="dark:text-neutral-300">Environmental stewardship and sustainable development</span>
-                </li>
-              </ul>
+        <div className="text-center">
+          <h2 className="text-3xl font-extrabold text-gray-900 dark:text-white sm:text-4xl">
+            Ethics & Compliance
+          </h2>
+          <p className="mt-4 text-lg text-gray-600 dark:text-gray-400">
+            Report any ethical concerns or compliance issues
+          </p>
+        </div>
+
+        <div className="mt-12 max-w-lg mx-auto">
+          <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-y-6">
+            <div>
+              <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Name
+              </label>
+              <div className="mt-1">
+                <input
+                  type="text"
+                  name="name"
+                  id="name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  required
+                  className="block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:text-white sm:text-sm"
+                />
+              </div>
             </div>
-          </div>
-          
-          <div className="mt-10 lg:mt-0">
-            <div className="bg-neutral-50 dark:bg-neutral-700 rounded-lg shadow-sm p-6 border border-neutral-100 dark:border-neutral-600">
-              <h3 className="text-2xl font-semibold text-primary dark:text-white">Submit an Ethics Complaint</h3>
-              <p className="mt-2 text-neutral-600 dark:text-neutral-300">Use this form to submit concerns about professional conduct of NITP members.</p>
-              
-              <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="mt-6 space-y-4">
-                  <FormField
-                    control={form.control}
-                    name="name"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Your Name</FormLabel>
-                        <FormControl>
-                          <Input {...field} disabled={isSubmitting} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Email Address</FormLabel>
-                        <FormControl>
-                          <Input type="email" {...field} disabled={isSubmitting} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="subject"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Subject</FormLabel>
-                        <FormControl>
-                          <Input {...field} disabled={isSubmitting} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="details"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Complaint Details</FormLabel>
-                        <FormControl>
-                          <Textarea 
-                            rows={4} 
-                            {...field} 
-                            disabled={isSubmitting}
-                            className="resize-none"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="privacy"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                        <FormControl>
-                          <Checkbox
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                            disabled={isSubmitting}
-                          />
-                        </FormControl>
-                        <div className="space-y-1 leading-none">
-                          <FormLabel>
-                            I understand that this information will be used to address my complaint and may be shared with relevant NITP officials.
-                          </FormLabel>
-                        </div>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <Button type="submit" className="w-full" disabled={isSubmitting}>
-                    {isSubmitting ? "Submitting..." : "Submit Complaint"}
-                  </Button>
-                </form>
-              </Form>
+
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Email
+              </label>
+              <div className="mt-1">
+                <input
+                  type="email"
+                  name="email"
+                  id="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  required
+                  className="block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:text-white sm:text-sm"
+                />
+              </div>
             </div>
-          </div>
+
+            <div>
+              <label htmlFor="details" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Details
+              </label>
+              <div className="mt-1">
+                <textarea
+                  name="details"
+                  id="details"
+                  rows={4}
+                  value={formData.details}
+                  onChange={handleChange}
+                  required
+                  className="block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:text-white sm:text-sm"
+                />
+              </div>
+            </div>
+
+            <div>
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+              >
+                {isSubmitting ? 'Submitting...' : 'Submit Report'}
+              </button>
+            </div>
+
+            {submitStatus === 'success' && (
+              <div className="rounded-md bg-green-50 dark:bg-green-900 p-4">
+                <div className="flex">
+                  <div className="flex-shrink-0">
+                    <svg className="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <div className="ml-3">
+                    <p className="text-sm font-medium text-green-800 dark:text-green-200">
+                      Your report has been submitted successfully.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {submitStatus === 'error' && (
+              <div className="rounded-md bg-red-50 dark:bg-red-900 p-4">
+                <div className="flex">
+                  <div className="flex-shrink-0">
+                    <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <div className="ml-3">
+                    <p className="text-sm font-medium text-red-800 dark:text-red-200">
+                      There was an error submitting your report. Please try again.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+          </form>
         </div>
       </div>
     </section>
   );
-}
+};
+
+export default EthicsSection;

@@ -13,11 +13,20 @@ interface RegistrationStep {
   isCompleted: boolean;
 }
 
+interface RegistrationFormData {
+  membershipType: string;
+  documents: any;
+  [key: string]: any;
+}
+
 const Registration: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
-  const [formData, setFormData] = useState<any>({});
+  const [formData, setFormData] = useState<RegistrationFormData>({
+    membershipType: '',
+    documents: {}
+  });
   const [membershipCategory, setMembershipCategory] = useState<string>('full'); // Default to full member
 
   const steps: RegistrationStep[] = [
@@ -63,9 +72,11 @@ const Registration: React.FC = () => {
   };
 
   const handleDocumentUpload = (data: any) => {
-    setFormData((prev: any) => ({ ...prev, documents: data }));
-    // Submit the complete registration
-    handleRegistrationSubmit();
+    setFormData((prev: RegistrationFormData) => ({
+      ...prev,
+      documents: data
+    }));
+    setCurrentStep(prev => prev + 1);
   };
 
   const handleRegistrationSubmit = async () => {
@@ -123,10 +134,9 @@ const Registration: React.FC = () => {
       case 4:
         return (
           <DocumentUpload
-            onNext={handleDocumentUpload}
-            onPrevious={handlePrevious}
-            initialData={formData.documents}
-            membershipCategory={membershipCategory}
+            onSubmit={handleDocumentUpload}
+            isStudent={formData.membershipType === 'student'}
+            isProfessional={formData.membershipType === 'professional'}
           />
         );
       default:

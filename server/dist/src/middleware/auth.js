@@ -23,6 +23,10 @@ export const authorize = (roles) => {
         if (!req.user) {
             return res.status(401).json({ error: 'Authentication required' });
         }
+        // Allow ETHICS_OFFICER to access their own dashboard
+        if (req.user.role === 'ETHICS_OFFICER' && req.path === '/ethics-dashboard') {
+            return next();
+        }
         if (!roles.includes(req.user.role)) {
             return res.status(403).json({ error: 'Insufficient permissions' });
         }
