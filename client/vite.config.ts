@@ -18,7 +18,7 @@ export default defineConfig({
     strictPort: true,
     proxy: {
       '/api': {
-        target: 'http://localhost:3000',
+        target: 'http://localhost:5600',
         changeOrigin: true,
       },
     },
@@ -31,9 +31,13 @@ export default defineConfig({
       output: {
         manualChunks: {
           vendor: ['react', 'react-dom', 'react-router-dom'],
+          mui: ['@mui/material', '@emotion/react', '@emotion/styled'],
         },
       },
     },
+  },
+  optimizeDeps: {
+    include: ['@mui/material', '@emotion/react', '@emotion/styled'],
   },
   base: '/',
 }); 

@@ -1,7 +1,9 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link } from "wouter";
 
 const Applications = () => {
+  const [showNewApplicationModal, setShowNewApplicationModal] = useState(false);
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header */}
@@ -122,11 +124,67 @@ const Applications = () => {
             <div className="flex justify-between items-center mb-6">
               <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-200">My Applications</h1>
               <div>
-                <button className="px-4 py-2 bg-blue-700 text-white rounded-md text-sm hover:bg-blue-800">
+                <button 
+                  onClick={() => setShowNewApplicationModal(true)}
+                  className="px-4 py-2 bg-blue-700 text-white rounded-md text-sm hover:bg-blue-800"
+                >
                   New Application
                 </button>
               </div>
             </div>
+
+            {/* New Application Modal */}
+            {showNewApplicationModal && (
+              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-2xl w-full mx-4">
+                  <div className="flex justify-between items-center mb-4">
+                    <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200">Select Application Type</h2>
+                    <button 
+                      onClick={() => setShowNewApplicationModal(false)}
+                      className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <Link 
+                      href="/sar/application"
+                      className="block p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:border-blue-500 dark:hover:border-blue-500 transition-colors"
+                    >
+                      <div className="flex items-center space-x-3">
+                        <div className="bg-blue-100 dark:bg-blue-900/30 p-2 rounded-lg">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-blue-700 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
+                          </svg>
+                        </div>
+                        <div>
+                          <h3 className="font-medium text-gray-900 dark:text-gray-100">Site Analysis Report (SAR)</h3>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">Fee: ₦30,200</p>
+                        </div>
+                      </div>
+                    </Link>
+                    <Link 
+                      href="/eiar/application"
+                      className="block p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:border-blue-500 dark:hover:border-blue-500 transition-colors"
+                    >
+                      <div className="flex items-center space-x-3">
+                        <div className="bg-blue-100 dark:bg-blue-900/30 p-2 rounded-lg">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-blue-700 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" />
+                          </svg>
+                        </div>
+                        <div>
+                          <h3 className="font-medium text-gray-900 dark:text-gray-100">EIAR Application</h3>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">Fee: ₦50,200</p>
+                        </div>
+                      </div>
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Application Cards */}
             <div className="space-y-6">
